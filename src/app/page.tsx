@@ -15,8 +15,73 @@ export default function Home() {
 
 
         {/* Área Principal Derecha: La Tabla */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-row gap-5">
           <Card className="p-0">
+            <CardContent className="px-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-default">
+                    <TableHead className="text-center border-r" rowSpan={3} colSpan={2}>Check Points</TableHead>
+                    <TableHead className="text-center border-r" colSpan={2}>VOR</TableHead>
+
+                    <TableHead className="text-center border-r" rowSpan={3}>Course</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={3}>Altitud</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={1} colSpan={2}>Wind</TableHead>
+                    <TableHead className="text-center border-r">CAS</TableHead>
+
+                    <TableHead className="text-center border-r" >TC</TableHead>
+                    <TableHead className="text-center border-r" >TH</TableHead>                      
+                    <TableHead className="text-center border-r" >MH</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={3}>CH</TableHead>
+
+                    <TableHead className="text-center border-r">Dist.</TableHead>
+                    <TableHead className="text-center border-r">GS</TableHead>
+
+                    <TableHead className="text-center border-r" rowSpan={2}>ETE</TableHead>
+                    
+                    <TableHead className="text-center border-r" rowSpan={2}>ETA</TableHead>
+                    
+                    <TableHead className="text-center border-r" rowSpan={2}>Fuel</TableHead>
+                    
+                  </TableRow>
+
+                  <TableRow className="hover:bg-default">
+                    <TableHead className="text-center border-r" rowSpan={2}>Frecuencia</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={2}>Identificación</TableHead>
+
+                    <TableHead className="text-center border-r">Dirección</TableHead>
+                    <TableHead className="text-center border-r">Velocidad</TableHead>
+
+                    <TableHead className="text-center border-r">
+                      <Input type="number" placeholder="4.2" />
+                    </TableHead>
+
+                    <TableHead className="text-center border-r" rowSpan={2}>-L<br/>+R<br/>WCA</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={2}>-E<br/>+W<br/>Var.</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={2}>+Dev.</TableHead>
+
+                    <TableHead className="text-center border-r">Leg</TableHead>
+                    <TableHead className="text-center border-r">Est.</TableHead>
+
+                  </TableRow>
+
+                  <TableRow className="hover:bg-default">
+                    <TableHead className="text-center border-r" colSpan={2}>Temperatura</TableHead>
+
+                    <TableHead className="text-center border-r">TAS</TableHead>
+
+                    <TableHead className="text-center border-r">Rem</TableHead>
+                    <TableHead className="text-center border-r">Act</TableHead>
+
+                    <TableHead className="text-center border-r" >ATE</TableHead>
+                    <TableHead className="text-center border-r" >ATA</TableHead>
+                    <TableHead className="text-center border-r" >Rem</TableHead>
+                  </TableRow>
+                </TableHeader>
+              </Table>
+            </CardContent>
+          </Card>
+          {/* <Card className="p-0">
             <CardContent className="px-0">
               <Table>
                 <TableHeader>
@@ -106,7 +171,7 @@ export default function Home() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r">TC</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={3} >TC</TableHead>
                     <TableHead className="text-center border-r">TH</TableHead>                      
                     <TableHead className="text-center border-r">MH</TableHead>
                     <TableHead className="text-center">CM</TableHead>
@@ -133,7 +198,7 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <Card className="p-0">
+          {/* <Card className="p-0">
             <CardContent className="px-0">
               <Table>
                 <TableHeader>
@@ -182,7 +247,7 @@ export default function Home() {
                 </TableBody>
               </Table>
             </CardContent>
-          </Card>
+          </Card> */} 
         </div>
       </div>
     </main>
