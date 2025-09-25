@@ -1,10 +1,28 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import React from "react";
+import { useState } from "react";
+
+interface Checkpoint {
+  id: number;
+}
 
 export default function Home() {
+  const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([
+    { id: 1 }
+  ]);
+
+  const agregarPunto = () => {
+    const nuevoPunto: Checkpoint = { id: Date.now() };
+    setCheckpoints(prevCheckpoints => [...prevCheckpoints, nuevoPunto]);
+  };
+
+
   return (
     <main className="bg-slate-50 min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -13,36 +31,34 @@ export default function Home() {
           <p className="text-slate-500">Introduce los datos para calcular.</p>
         </header>
 
-
-        {/* Área Principal Derecha: La Tabla */}
-        <div className="flex flex-row gap-5">
+        <div className="flex flex-col gap-5">
+          <Button onClick={agregarPunto} className="w-fit">Agregar Punto</Button>
           <Card className="p-0">
             <CardContent className="px-0">
-              <Table>
+              <Table id="data-table">
                 <TableHeader>
                   <TableRow className="hover:bg-default">
                     <TableHead className="text-center border-r" rowSpan={3} colSpan={2}>Check Points</TableHead>
-                    <TableHead className="text-center border-r" colSpan={2}>VOR</TableHead>
+                    <TableHead className="text-center border-r bg-gray-200" colSpan={2}>VOR</TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={3}>Course</TableHead>
                     <TableHead className="text-center border-r" rowSpan={3}>Altitud</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={1} colSpan={2}>Wind</TableHead>
+                    <TableHead className="text-center border-r bg-gray-200" rowSpan={1} colSpan={2}>Wind</TableHead>
                     <TableHead className="text-center border-r">CAS</TableHead>
 
                     <TableHead className="text-center border-r" >TC</TableHead>
-                    <TableHead className="text-center border-r" >TH</TableHead>                      
+                    <TableHead className="text-center border-r" >TH</TableHead>
                     <TableHead className="text-center border-r" >MH</TableHead>
                     <TableHead className="text-center border-r" rowSpan={3}>CH</TableHead>
 
-                    <TableHead className="text-center border-r">Dist.</TableHead>
-                    <TableHead className="text-center border-r">GS</TableHead>
+                    <TableHead className="text-center border-r bg-gray-200">Dist.</TableHead>
+                    <TableHead className="text-center border-r bg-gray-200">GS</TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={2}>ETE</TableHead>
-                    
+
                     <TableHead className="text-center border-r" rowSpan={2}>ETA</TableHead>
-                    
+
                     <TableHead className="text-center border-r" rowSpan={2}>Fuel</TableHead>
-                    
                   </TableRow>
 
                   <TableRow className="hover:bg-default">
@@ -56,8 +72,8 @@ export default function Home() {
                       <Input type="number" placeholder="4.2" />
                     </TableHead>
 
-                    <TableHead className="text-center border-r" rowSpan={2}>-L<br/>+R<br/>WCA</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={2}>-E<br/>+W<br/>Var.</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={2}>-L<br />+R<br />WCA</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={2}>-E<br />+W<br />Var.</TableHead>
                     <TableHead className="text-center border-r" rowSpan={2}>+Dev.</TableHead>
 
                     <TableHead className="text-center border-r">Leg</TableHead>
@@ -73,181 +89,53 @@ export default function Home() {
                     <TableHead className="text-center border-r">Rem</TableHead>
                     <TableHead className="text-center border-r">Act</TableHead>
 
-                    <TableHead className="text-center border-r" >ATE</TableHead>
-                    <TableHead className="text-center border-r" >ATA</TableHead>
-                    <TableHead className="text-center border-r" >Rem</TableHead>
-                  </TableRow>
-                </TableHeader>
-              </Table>
-            </CardContent>
-          </Card>
-          {/* <Card className="p-0">
-            <CardContent className="px-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r" rowSpan={2} colSpan={2}>Check Points</TableHead>
-                    <TableHead className="text-center" colSpan={2}>VOR</TableHead>
-                  </TableRow>
-                  <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r">Frecuencia</TableHead>
-                    <TableHead className="text-center">Identificación</TableHead>
+                    <TableHead className="text-center border-r">ATE</TableHead>
+                    <TableHead className="text-center border-r">ATA</TableHead>
+                    <TableHead className="text-center border-r">Rem</TableHead>
                   </TableRow>
                 </TableHeader>
 
                 <TableBody>
-                  <TableRow className="hover:bg-default">
-                    <TableCell>
-                      <Input id="checkpoint1" type="text" placeholder="CP1" />
-                    </TableCell>
-                    <TableCell>
-                      <Input id="checkpoint2" type="text" placeholder="CP2" />
-                    </TableCell>
-                    <TableCell>
-                      <Input id="frequency" type="number" placeholder="42.0" />
-                    </TableCell>
-                    <TableCell>
-                      <Input id="identification" type="number" placeholder="42.0" />
-                    </TableCell>
-                  </TableRow>
+                  {checkpoints.map((checkpoint) => (
+                    // Usamos React.Fragment para agrupar las dos TableRow por cada punto
+                    // La 'key' es crucial para que React identifique cada elemento de la lista
+                    <React.Fragment key={checkpoint.id}>
+                      <TableRow className="hover:bg-default border-b-0">
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell>...</TableCell>
+                        <TableCell>...</TableCell>
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell rowSpan={2}>...</TableCell>
+                        <TableCell>...</TableCell>
+                        <TableCell>...</TableCell>
+                        <TableCell>...</TableCell>
+                        <TableCell>...</TableCell>
+                        <TableCell>...</TableCell>
+                      </TableRow>
+                      <TableRow className="hover:bg-default">
+                        <TableCell colSpan={2}>...</TableCell>
+                        <TableCell>...</TableCell>
+                        <TableCell>...</TableCell>
+                        <TableCell>...</TableCell>
+                        <TableCell>...</TableCell>
+                        <TableCell>...</TableCell>
+                      </TableRow>
+                    </React.Fragment>
+                  ))}
                 </TableBody>
+
               </Table>
             </CardContent>
           </Card>
 
-          <Card className="p-0">
-            <CardContent className="px-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r" rowSpan={3}>Course</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={3}>Altitud</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={1} colSpan={2}>Wind</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={3}>CAS</TableHead>
-                    <TableHead className="text-center" rowSpan={3}>TAS</TableHead>
-                  </TableRow>
-                  <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r" rowSpan={1}>Dirección</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={1}>Velocidad</TableHead>
-                  </TableRow>
-                  <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r" colSpan={2}>Temperatura</TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                  <TableRow className="hover:bg-default">
-                    <TableCell rowSpan={2}>
-                      <Input id="course" type="number" placeholder="num" />
-                    </TableCell>
-                    <TableCell rowSpan={2}>
-                      <Input id="altitude" type="number" placeholder="" />
-                    </TableCell>
-                    <TableCell rowSpan={1}>
-                      <Input id="direction" type="number" placeholder="42.0" />
-                    </TableCell>
-                    <TableCell rowSpan={1}>
-                      <Input id="speed" type="number" placeholder="42.0" />
-                    </TableCell>
-                    <TableCell rowSpan={2}>
-                      <Input id="CAS" type="number" placeholder="42.0" />
-                    </TableCell>
-                    <TableCell rowSpan={2}>
-                      <Label id="TAS">TAS</Label>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="hover:bg-default">
-                    <TableCell rowSpan={1} colSpan={2}>
-                      <Input id="temperature" type="number" placeholder="[°]" />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          <Card className="p-0">
-            <CardContent className="px-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r" rowSpan={3} >TC</TableHead>
-                    <TableHead className="text-center border-r">TH</TableHead>                      
-                    <TableHead className="text-center border-r">MH</TableHead>
-                    <TableHead className="text-center">CM</TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody>  
-                  <TableRow className="hover:bg-default">
-                    <TableCell>
-                      <Input id="TC" type="text" placeholder="x" />
-                    </TableCell>
-                    <TableCell>
-                      <Input id="TH" type="text" placeholder="x" />
-                    </TableCell>
-                    <TableCell>
-                      <Input id="MH" type="number" placeholder="42.0" />
-                    </TableCell>
-                    <TableCell>
-                      <Input id="CM" type="number" placeholder="42.0" />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          {/* <Card className="p-0">
-            <CardContent className="px-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r" rowSpan={3}>Distancia</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={3}>Altitud</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={1} colSpan={2}>Wind</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={3}>CAS</TableHead>
-                    <TableHead className="text-center" rowSpan={3}>TAS</TableHead>
-                  </TableRow>
-                  <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r" rowSpan={1}>Dirección</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={1}>Velocidad</TableHead>
-                  </TableRow>
-                  <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r" colSpan={2}>Temperatura</TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                  <TableRow className="hover:bg-default">
-                    <TableCell rowSpan={2}>
-                      <Input id="course" type="number" placeholder="num" />
-                    </TableCell>
-                    <TableCell rowSpan={2}>
-                      <Input id="altitude" type="number" placeholder="" />
-                    </TableCell>
-                    <TableCell rowSpan={1}>
-                      <Input id="direction" type="number" placeholder="42.0" />
-                    </TableCell>
-                    <TableCell rowSpan={1}>
-                      <Input id="speed" type="number" placeholder="42.0" />
-                    </TableCell>
-                    <TableCell rowSpan={2}>
-                      <Input id="CAS" type="number" placeholder="42.0" />
-                    </TableCell>
-                    <TableCell rowSpan={2}>
-                      <Label id="TAS">TAS</Label>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="hover:bg-default">
-                    <TableCell rowSpan={1} colSpan={2}>
-                      <Input id="temperature" type="number" placeholder="[°]" />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card> */} 
         </div>
       </div>
     </main>
