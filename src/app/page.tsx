@@ -13,9 +13,7 @@ interface Checkpoint {
 }
 
 export default function Home() {
-  const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([
-    { id: 1 }
-  ]);
+  const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([{ id: 1 }]);
 
   const agregarPunto = () => {
     const nuevoPunto: Checkpoint = { id: Date.now() };
