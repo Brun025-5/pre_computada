@@ -22,15 +22,37 @@ export default function Home() {
 
 
   return (
-    <main className="bg-slate-50 min-h-screen p-4 sm:p-6 lg:p-8">
+    <main className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-slate-800">Pre Computada</h1>
           <p className="text-slate-500">Introduce los datos para calcular.</p>
         </header>
 
-        <div className="flex flex-col gap-5">
-          <Button onClick={agregarPunto} className="w-fit">Agregar Punto</Button>
+        <div className="flex flex-col gap-5">          
+          
+          <div className="grid grid-cols-5 items-center gap-3">
+            <Button onClick={agregarPunto} className="w-fit hover:cursor-pointer">Agregar Punto</Button>
+
+            <div className="col-start-3 flex flex-col gap-2">
+              <Label>Combustible Inicial</Label>
+              <Input type="number" id="init_fuel"/>
+            </div>
+
+            <div className="flex justify-end">
+              <div className="flex flex-col gap-2 ">
+                <Label>Time Off</Label>
+                <Input type="time" id="time_off" className="w-fit"/>
+              </div>
+              
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label>GPH</Label>
+              <Input type="number" id="gph"/>
+            </div>
+          </div>
+
           <Card className="p-0">
             <CardContent className="px-0">
               <Table id="data-table">
@@ -41,7 +63,7 @@ export default function Home() {
 
                     <TableHead className="text-center border-r" rowSpan={3}>Course</TableHead>
                     <TableHead className="text-center border-r" rowSpan={3}>Altitud</TableHead>
-                    <TableHead className="text-center border-r bg-gray-200" rowSpan={1} colSpan={2}>Wind</TableHead>
+                    <TableHead className="text-center border-r bg-gray-200" rowSpan={1} colSpan={2}>Aire</TableHead>
                     <TableHead className="text-center border-r">CAS</TableHead>
 
                     <TableHead className="text-center border-r" >TC</TableHead>
@@ -66,8 +88,8 @@ export default function Home() {
                     <TableHead className="text-center border-r">Dirección</TableHead>
                     <TableHead className="text-center border-r">Velocidad</TableHead>
 
-                    <TableHead className="text-center border-r">
-                      <Input type="number" placeholder="4.2" />
+                    <TableHead className="text-center border-r p-0">
+                      <Input type="number" placeholder="4" />
                     </TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={2}>-L<br />+R<br />WCA</TableHead>
@@ -99,32 +121,35 @@ export default function Home() {
                     // La 'key' es crucial para que React identifique cada elemento de la lista
                     <React.Fragment key={checkpoint.id}>
                       <TableRow className="hover:bg-default border-b-0">
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell>...</TableCell>
-                        <TableCell>...</TableCell>
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell rowSpan={2}>...</TableCell>
-                        <TableCell>...</TableCell>
-                        <TableCell>...</TableCell>
-                        <TableCell>...</TableCell>
-                        <TableCell>...</TableCell>
-                        <TableCell>...</TableCell>
+                        <TableCell rowSpan={2}><Input id="cp1" type="text"/></TableCell>
+                        <TableCell rowSpan={2}><Input id="cp2" type="text"/></TableCell>
+                        <TableCell rowSpan={2}><Input id="frequency" type="number"/></TableCell>
+                        <TableCell rowSpan={2}><Input id="identification" type="number"/></TableCell>
+                        <TableCell rowSpan={2}><Input id="course" type="number"/></TableCell>
+                        <TableCell rowSpan={2}><Input id="altitude" type="number"/></TableCell>
+                        <TableCell><Input id="direction" type="number"/></TableCell>
+                        <TableCell><Input id="velocity" type="number"/></TableCell>
+                        <TableCell rowSpan={2}><Label id="tas">...</Label></TableCell>
+                        <TableCell><Label id="tc1">...</Label></TableCell>
+                        <TableCell className="p-1"><Input id="th1" type="number"/></TableCell>
+                        <TableCell className="p-1"><Input id="mh1" type="number"/></TableCell>
+                        <TableCell rowSpan={2}><Label id="ch">...</Label></TableCell>
+                        <TableCell><Label id="leg">...</Label></TableCell>
+                        <TableCell><Input id="est" type="number"/></TableCell>
+                        <TableCell><Label id="ete">...</Label></TableCell>
+                        <TableCell><Label id="eta">...</Label></TableCell>
+                        <TableCell><Input id="fuel" type="number"/></TableCell>
                       </TableRow>
                       <TableRow className="hover:bg-default">
-                        <TableCell colSpan={2}>...</TableCell>
-                        <TableCell>...</TableCell>
-                        <TableCell>...</TableCell>
-                        <TableCell>...</TableCell>
-                        <TableCell>...</TableCell>
-                        <TableCell>...</TableCell>
+                        <TableCell colSpan={2}><Input id="temperature" type="number"/></TableCell>
+                        <TableCell><Label id="tc2">...</Label></TableCell>
+                        <TableCell className="p-1"><Input id="th2" type="number"/></TableCell>
+                        <TableCell className="p-1"><Input id="mh2" type="number"/></TableCell>
+                        <TableCell><Label id="rem">...</Label></TableCell>
+                        <TableCell><Input id="act" type="number"/></TableCell>
+                        <TableCell><Input id="ate" type="number"/></TableCell>
+                        <TableCell><Input id="ata" type="number"/></TableCell>
+                        <TableCell><Input id="rem" type="number"/></TableCell>
                       </TableRow>
                     </React.Fragment>
                   ))}
