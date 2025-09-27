@@ -49,6 +49,11 @@ const initialFlightState: FlightProps = {
   tas: '', tc1: '', tc2: '', ch: '', leg: '', ete: '', eta: '', rem2: ''
 };
 
+function round(value: number, decimals: number): number {
+  const factor = Math.pow(10, decimals);
+  return Math.round(value * factor) / factor;
+}
+
 export default function Home() {
 
   const [headerData, setHeaderData] = useState({
@@ -114,13 +119,16 @@ export default function Home() {
     }
 
     //Cálculo de TAS
-    let calcultedTas = 0;
+    let calculatedTas = 0;
 
     if(headerData.cas && currentRowData.altitude){
       const cas = Number(headerData.cas) || 0;
       const altitude = Number(currentRowData.altitude) || 0; 
 
-      calcultedTas = (((cas * altitude * 0.02) + cas)/1000) + cas
+      let notRoundedTas = (((cas * altitude * 0.02) + cas)/1000) + cas
+      
+      calculatedTas = round(notRoundedTas, 0);
+      console.log("TAS calculado: ", calculatedTas);
     }else{
       if(!headerData.cas){
         alert("Por favor, ingresa el CAS en el encabezado.");
@@ -130,17 +138,19 @@ export default function Home() {
         return;
       }
     }
-
+    
     //cálculo de tc
     let calculatedTc = 0;
 
-    if(currentRowData.direction && currentRowData.course && (calcultedTas != 0)){
+    if(currentRowData.direction && currentRowData.course && currentRowData.velocity && (calculatedTas != 0)){
       const course = Number(currentRowData.course) || 0;
       const direction = Number(currentRowData.direction) || 0;
+      const velocity = Number(currentRowData.velocity) || 0;
       
       const angle = direction - course;
 
-      calculatedTc = (Math.sin(angle) * direction)/(calcultedTas/60);
+      let notRoundedTc = (Math.sin(angle * Math.PI/180) * velocity)/(calculatedTas/60);
+      calculatedTc = round(notRoundedTc, 0);
     }else{
       if(!currentRowData.direction){
         alert("Por favor, ingresa la Dirección del viento en la fila " + (index + 1) + ".");
@@ -150,13 +160,30 @@ export default function Home() {
         alert("Por favor, ingresa el Curso en la fila " + (index + 1) + ".");
         return;
       }
-      if(calcultedTas == 0){
+      if(!currentRowData.velocity){
+        alert("Por favor, ingresa la Velocidad del viento en la fila " + (index + 1) + ".");
+        return;
+      }
+      if(calculatedTas == 0){
         alert("TAS = 0, por favor revisa los datos.");
         return;
       }
 
     }
     
+    //cálculo de ch
+
+    let calculatedCh = 0;
+    if(currentRowData.course && calculatedTc){
+      const course = Number(currentRowData.course) || 0;
+      const tc = Number(currentRowData.tc1) || 0;
+      const mh = Number(currentRowData.mh1) || 0;
+      const th = Number(currentRowData.th1) || 0;
+
+      calculatedCh = round(course + tc + mh + th, 0);
+    }
+
+
     
     // ...haz lo mismo para los demás valores que necesites...
 
@@ -167,7 +194,9 @@ export default function Home() {
     const updatedProps = [...flightProps];
     updatedProps[index] = {
       ...updatedProps[index],
-      tc1: calculatedValue.toString(), // Actualiza la propiedad 'tc' (o la que sea)
+      tc1: calculatedTc.toFixed(0),
+      tas: calculatedTas.toFixed(0),
+      ch: calculatedCh.toFixed(0),
       // ...actualiza otros campos calculados...
     };
     setFlightProps(updatedProps);
