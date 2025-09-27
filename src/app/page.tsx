@@ -1,25 +1,177 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { dir } from "console";
 import React from "react";
 import { useState } from "react";
 
-interface Checkpoint {
+interface FlightProps {
   id: number;
+  cp1: string;
+  cp2: string;
+  frequency: string;
+  identification: string;
+  course: string;
+  altitude: string;
+  direction: string;
+  velocity: string;
+  temperature: string;
+  th1: string;
+  mh1: string;
+  est: string;
+  fuel: string;
+  th2: string;
+  mh2: string;
+  act: string;
+  ate: string;
+  ata: string;
+  rem1: string;
+  // Calculated fields
+  tas: string;
+  tc1: string;
+  tc2: string;
+  ch: string;
+  leg: string;
+  ete: string;
+  eta: string;
+  rem2: string;
 }
 
-export default function Home() {
-  const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([{ id: 1 }]);
+const initialFlightState: FlightProps = {
+  id: 0,
+  cp1: '', cp2: '', frequency: '', identification: '', course: '', altitude: '',
+  direction: '', velocity: '', temperature: '', th1: '', mh1: '', est: '',
+  fuel: '', th2: '', mh2: '', act: '', ate: '', ata: '', rem1: '',
+  tas: '', tc1: '', tc2: '', ch: '', leg: '', ete: '', eta: '', rem2: ''
+};
 
-  const agregarPunto = () => {
-    const nuevoPunto: Checkpoint = { id: Date.now() };
-    setCheckpoints(prevCheckpoints => [...prevCheckpoints, nuevoPunto]);
+export default function Home() {
+
+  const [headerData, setHeaderData] = useState({
+    initialFuel: '',
+    timeOff: '',
+    gph: '',
+    cas: ''
+  });
+
+  const [flightProps, setFlightProps] = useState<FlightProps[]>([
+    { ...initialFlightState, id: Date.now() }
+  ]);
+
+  const handleHeaderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value, type } = e.target;
+
+    if (type === "number") {
+      const regex = /^[0-9]*\.?[0-9]*$/;
+      if (!regex.test(value)) {
+        return;
+      }
+    }
+
+    setHeaderData(prev => ({ ...prev, [id]: value }));
   };
 
+  const handleBodyChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
+
+
+    if (type === "number") {
+      const regex = /^[0-9]*\.?[0-9]*$/;
+      if (!regex.test(value)) {
+        return;
+      }
+    }
+
+    const updatedProps = [...flightProps];
+    updatedProps[index] = { ...updatedProps[index], [name]: value };
+    setFlightProps(updatedProps);
+  };
+
+  const agregarPunto = () => {
+    setFlightProps(prev => [...prev, { ...initialFlightState, id: Date.now() }]);
+  };
+
+  const handleCalculateRow = (index: number) => {
+    const currentRowData = flightProps[index];
+
+    console.log("Calculando datos solo para la fila:", index);
+    console.log(currentRowData);
+
+    //cálculo de leg y rem
+    let currentFuel = 0;
+    if(index == 0){
+      if(headerData.initialFuel){
+        currentFuel = Number(headerData.initialFuel) || 0;
+      }else{
+        alert("Por favor, ingresa el Combustible Inicial.");
+      }
+    }else{
+      const previousFuel = flightProps[index - 1].fuel;
+    }
+
+    //Cálculo de TAS
+    let calcultedTas = 0;
+
+    if(headerData.cas && currentRowData.altitude){
+      const cas = Number(headerData.cas) || 0;
+      const altitude = Number(currentRowData.altitude) || 0; 
+
+      calcultedTas = (((cas * altitude * 0.02) + cas)/1000) + cas
+    }else{
+      if(!headerData.cas){
+        alert("Por favor, ingresa el CAS en el encabezado.");
+        return;
+      }if(!currentRowData.altitude){
+        alert("Por favor, ingresa la Altitud en la fila " + (index + 1) + ".");
+        return;
+      }
+    }
+
+    //cálculo de tc
+    let calculatedTc = 0;
+
+    if(currentRowData.direction && currentRowData.course && (calcultedTas != 0)){
+      const course = Number(currentRowData.course) || 0;
+      const direction = Number(currentRowData.direction) || 0;
+      
+      const angle = direction - course;
+
+      calculatedTc = (Math.sin(angle) * direction)/(calcultedTas/60);
+    }else{
+      if(!currentRowData.direction){
+        alert("Por favor, ingresa la Dirección del viento en la fila " + (index + 1) + ".");
+        return;
+      }
+      if(!currentRowData.course){
+        alert("Por favor, ingresa el Curso en la fila " + (index + 1) + ".");
+        return;
+      }
+      if(calcultedTas == 0){
+        alert("TAS = 0, por favor revisa los datos.");
+        return;
+      }
+
+    }
+    
+    
+    // ...haz lo mismo para los demás valores que necesites...
+
+    // Ejemplo de un cálculo simple
+    const calculatedValue = 10; // Reemplaza esto con tu lógica real
+
+    // 3. Actualiza el estado de forma inmutable
+    const updatedProps = [...flightProps];
+    updatedProps[index] = {
+      ...updatedProps[index],
+      tc1: calculatedValue.toString(), // Actualiza la propiedad 'tc' (o la que sea)
+      // ...actualiza otros campos calculados...
+    };
+    setFlightProps(updatedProps);
+  };
 
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -29,27 +181,27 @@ export default function Home() {
           <p className="text-slate-500">Introduce los datos para calcular.</p>
         </header>
 
-        <div className="flex flex-col gap-5">          
-          
+        <div className="flex flex-col gap-5">
+
           <div className="grid grid-cols-5 items-center gap-3">
             <Button onClick={agregarPunto} className="w-fit hover:cursor-pointer">Agregar Punto</Button>
 
             <div className="col-start-3 flex flex-col gap-2">
-              <Label>Combustible Inicial</Label>
-              <Input type="number" id="init_fuel"/>
+              <Label htmlFor="initialFuel">Combustible Inicial</Label>
+              <Input type="number" id="initialFuel" value={headerData.initialFuel} onChange={handleHeaderChange} />
             </div>
 
             <div className="flex justify-end">
               <div className="flex flex-col gap-2 ">
                 <Label>Time Off</Label>
-                <Input type="time" id="time_off" className="w-fit"/>
+                <Input type="time" id="timeOff" className="w-fit" value={headerData.timeOff} onChange={handleHeaderChange} />
               </div>
-              
+
             </div>
 
             <div className="flex flex-col gap-2">
               <Label>GPH</Label>
-              <Input type="number" id="gph"/>
+              <Input type="number" id="gph" value={headerData.gph} onChange={handleHeaderChange} />
             </div>
           </div>
 
@@ -89,7 +241,7 @@ export default function Home() {
                     <TableHead className="text-center border-r">Velocidad</TableHead>
 
                     <TableHead className="text-center border-r p-0">
-                      <Input type="number" placeholder="4" />
+                      <Input type="number" id="cas" value={headerData.cas} onChange={handleHeaderChange} />
                     </TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={2}>-L<br />+R<br />WCA</TableHead>
@@ -116,40 +268,40 @@ export default function Home() {
                 </TableHeader>
 
                 <TableBody>
-                  {checkpoints.map((checkpoint) => (
-                    // Usamos React.Fragment para agrupar las dos TableRow por cada punto
-                    // La 'key' es crucial para que React identifique cada elemento de la lista
-                    <React.Fragment key={checkpoint.id}>
+                  {flightProps.map((props, index) => (
+                    <React.Fragment key={props.id}>
                       <TableRow className="hover:bg-default border-b-0">
-                        <TableCell rowSpan={2}><Input id="cp1" type="text"/></TableCell>
-                        <TableCell rowSpan={2}><Input id="cp2" type="text"/></TableCell>
-                        <TableCell rowSpan={2}><Input id="frequency" type="number"/></TableCell>
-                        <TableCell rowSpan={2}><Input id="identification" type="number"/></TableCell>
-                        <TableCell rowSpan={2}><Input id="course" type="number"/></TableCell>
-                        <TableCell rowSpan={2}><Input id="altitude" type="number"/></TableCell>
-                        <TableCell><Input id="direction" type="number"/></TableCell>
-                        <TableCell><Input id="velocity" type="number"/></TableCell>
-                        <TableCell rowSpan={2}><Label id="tas">...</Label></TableCell>
-                        <TableCell><Label id="tc1">...</Label></TableCell>
-                        <TableCell className="p-1"><Input id="th1" type="number"/></TableCell>
-                        <TableCell className="p-1"><Input id="mh1" type="number"/></TableCell>
-                        <TableCell rowSpan={2}><Label id="ch">...</Label></TableCell>
-                        <TableCell><Label id="leg">...</Label></TableCell>
-                        <TableCell><Input id="est" type="number"/></TableCell>
-                        <TableCell><Label id="ete">...</Label></TableCell>
-                        <TableCell><Label id="eta">...</Label></TableCell>
-                        <TableCell><Input id="fuel" type="number"/></TableCell>
+                        <TableCell><Input name="cp1" value={props.cp1} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><Input name="cp2" value={props.cp2} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell rowSpan={2}><Input type="number" name="frequency" value={props.frequency} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell rowSpan={2}><Input type="number" name="identification" value={props.identification} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell rowSpan={2}><Input type="number" name="course" value={props.course} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell rowSpan={2}><Input type="number" name="altitude" value={props.altitude} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><Input type="number" name="direction" value={props.direction} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><Input type="number" name="velocity" value={props.velocity} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell rowSpan={2}><span>{props.tas}</span></TableCell>
+                        <TableCell><span>{props.tc1}</span></TableCell>
+                        <TableCell className="p-1"><Input type="number" name="th1" value={props.th1} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell className="p-1"><Input type="number" name="mh1" value={props.mh1} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell rowSpan={2}><span>{props.ch}</span></TableCell>
+                        <TableCell><span>{props.leg}</span></TableCell>
+                        <TableCell><Input type="number" name="est" value={props.est} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><span>{props.ete}</span></TableCell>
+                        <TableCell><span>{props.eta}</span></TableCell>
+                        <TableCell><Input type="number" name="fuel" value={props.fuel} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                       </TableRow>
+
                       <TableRow className="hover:bg-default">
-                        <TableCell colSpan={2}><Input id="temperature" type="number"/></TableCell>
-                        <TableCell><Label id="tc2">...</Label></TableCell>
-                        <TableCell className="p-1"><Input id="th2" type="number"/></TableCell>
-                        <TableCell className="p-1"><Input id="mh2" type="number"/></TableCell>
-                        <TableCell><Label id="rem">...</Label></TableCell>
-                        <TableCell><Input id="act" type="number"/></TableCell>
-                        <TableCell><Input id="ate" type="number"/></TableCell>
-                        <TableCell><Input id="ata" type="number"/></TableCell>
-                        <TableCell><Input id="rem" type="number"/></TableCell>
+                        <TableCell colSpan={2} className="text-center"> <Button variant={"default"} className="hover:cursor-pointer" onClick={() => handleCalculateRow(index)}>Calcular</Button> </TableCell>
+                        <TableCell colSpan={2}><Input type="number" name="temperature" value={props.temperature} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><span>{props.tc2}</span></TableCell>
+                        <TableCell className="p-1"><Input type="number" name="th2" value={props.th2} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell className="p-1"><Input type="number" name="mh2" value={props.mh2} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><span>{props.rem1}</span></TableCell>
+                        <TableCell><Input type="number" name="act" value={props.act} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><Input type="number" name="ate" value={props.ate} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><Input type="number" name="ata" value={props.ata} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><Input type="number" name="rem2" value={props.rem2} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                       </TableRow>
                     </React.Fragment>
                   ))}
@@ -158,6 +310,13 @@ export default function Home() {
               </Table>
             </CardContent>
           </Card>
+
+          {/* <div className="p-4 bg-gray-100 rounded-md mt-4">
+              <h3 className="font-bold">Estado Actual (Header):</h3>
+              <pre>{JSON.stringify(headerData, null, 2)}</pre>
+              <h3 className="font-bold mt-2">Estado Actual (Tabla):</h3>
+              <pre>{JSON.stringify(flightProps, null, 2)}</pre>
+          </div> */}
 
         </div>
       </div>
