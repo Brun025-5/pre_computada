@@ -13,6 +13,7 @@ interface FlightProps {
   id: number;
   cp1: string;
   cp2: string;
+  distance: string;
   frequency: string;
   identification: string;
   course: string;
@@ -43,7 +44,7 @@ interface FlightProps {
 
 const initialFlightState: FlightProps = {
   id: 0,
-  cp1: '', cp2: '', frequency: '', identification: '', course: '', altitude: '',
+  cp1: '', cp2: '', distance: '', frequency: '', identification: '', course: '', altitude: '',
   direction: '', velocity: '', temperature: '', th1: '', mh1: '', est: '',
   fuel: '', th2: '', mh2: '', act: '', ate: '', ata: '', rem1: '',
   tas: '', tc1: '', tc2: '', ch: '', leg: '', ete: '', eta: '', rem2: ''
@@ -106,75 +107,62 @@ export default function Home() {
     console.log("Calculando datos solo para la fila:", index);
     console.log(currentRowData);
 
-    //cálculo de leg y rem
-    let currentFuel = 0;
-    if(index == 0){
-      if(headerData.initialFuel){
-        currentFuel = Number(headerData.initialFuel) || 0;
-      }else{
-        alert("Por favor, ingresa el Combustible Inicial.");
-      }
-    }else{
-      const previousFuel = flightProps[index - 1].fuel;
-    }
-
     //Cálculo de TAS
     let calculatedTas = 0;
 
-    if(headerData.cas && currentRowData.altitude){
+    if (headerData.cas && currentRowData.altitude) {
       const cas = Number(headerData.cas) || 0;
-      const altitude = Number(currentRowData.altitude) || 0; 
+      const altitude = Number(currentRowData.altitude) || 0;
 
-      let notRoundedTas = (((cas * altitude * 0.02) + cas)/1000) + cas
-      
+      let notRoundedTas = (((cas * altitude * 0.02) + cas) / 1000) + cas
+
       calculatedTas = round(notRoundedTas, 0);
-      console.log("TAS calculado: ", calculatedTas);
-    }else{
-      if(!headerData.cas){
+    } else {
+      if (!headerData.cas) {
         alert("Por favor, ingresa el CAS en el encabezado.");
         return;
-      }if(!currentRowData.altitude){
+      } if (!currentRowData.altitude) {
         alert("Por favor, ingresa la Altitud en la fila " + (index + 1) + ".");
         return;
       }
     }
-    
+
     //cálculo de tc
     let calculatedTc = 0;
 
-    if(currentRowData.direction && currentRowData.course && currentRowData.velocity && (calculatedTas != 0)){
+    if (currentRowData.direction && currentRowData.course && currentRowData.velocity && (calculatedTas != 0)) {
       const course = Number(currentRowData.course) || 0;
       const direction = Number(currentRowData.direction) || 0;
       const velocity = Number(currentRowData.velocity) || 0;
-      
+
       const angle = direction - course;
 
-      let notRoundedTc = (Math.sin(angle * Math.PI/180) * velocity)/(calculatedTas/60);
+      let notRoundedTc = (Math.sin(angle * Math.PI / 180) * velocity) / (calculatedTas / 60);
       calculatedTc = round(notRoundedTc, 0);
-    }else{
-      if(!currentRowData.direction){
+    } else {
+      if (!currentRowData.direction) {
         alert("Por favor, ingresa la Dirección del viento en la fila " + (index + 1) + ".");
         return;
       }
-      if(!currentRowData.course){
+      if (!currentRowData.course) {
         alert("Por favor, ingresa el Curso en la fila " + (index + 1) + ".");
         return;
       }
-      if(!currentRowData.velocity){
+      if (!currentRowData.velocity) {
         alert("Por favor, ingresa la Velocidad del viento en la fila " + (index + 1) + ".");
         return;
       }
-      if(calculatedTas == 0){
+      if (calculatedTas == 0) {
         alert("TAS = 0, por favor revisa los datos.");
         return;
       }
 
     }
-    
+
     //cálculo de ch
 
     let calculatedCh = 0;
-    if(currentRowData.course && calculatedTc){
+    if (currentRowData.course && calculatedTc) {
       const course = Number(currentRowData.course) || 0;
       const tc = Number(currentRowData.tc1) || 0;
       const mh = Number(currentRowData.mh1) || 0;
@@ -183,12 +171,89 @@ export default function Home() {
       calculatedCh = round(course + tc + mh + th, 0);
     }
 
+    //cálculo de ete
+    let calculatedEte = 0;
+    if (currentRowData.distance && calculatedTas) {
+      const distance = Number(currentRowData.distance) || 0;
+      let notRoeundedEte = (distance * 60) / calculatedTas;
+      calculatedEte = round(notRoeundedEte, 0);
+    }
 
-    
-    // ...haz lo mismo para los demás valores que necesites...
+    //cálculo de eta
+    let calculatedEta = "";
+    let timeParts: string[] = [];
+    if (index == 0) {
+      if (headerData.timeOff) {
+        timeParts = headerData.timeOff.split(':');
+      } else {
+        alert("Por favor, ingresa el Time Off.");
+        return;
+      }
+    } else {
+      if (flightProps[index - 1].eta) {
+        timeParts = flightProps[index - 1].eta.split(':');
+      } else {
+        alert("No se pudo obtener el ETA de la fila anterior " + (index - 1) + ".");
+        return;
+      }
+    }
 
-    // Ejemplo de un cálculo simple
-    const calculatedValue = 10; // Reemplaza esto con tu lógica real
+    if (calculatedEte >= 60) {
+      let hoursToAdd = Math.floor(calculatedEte / 60);
+      let minutesToAdd = calculatedEte % 60;
+      let initialHours = Number(timeParts[0]) || 0;
+      let initialMinutes = Number(timeParts[1]) || 0;
+      let totalMinutes = initialMinutes + minutesToAdd;
+      let extraHoursFromMinutes = Math.floor(totalMinutes / 60);
+      let finalMinutes = totalMinutes % 60;
+      let finalHours = (initialHours + hoursToAdd + extraHoursFromMinutes) % 24; // Formato 24 horas
+      calculatedEta = `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
+    } else {
+      let initialMinutes = Number(timeParts[1]) || 0;
+      let minutesToAdd = calculatedEte;
+      let finalMinutes = initialMinutes + minutesToAdd;
+      let finalHours = Number(timeParts[0]) || 0;
+      if (finalMinutes >= 60) {
+        finalHours = (finalHours + 1) % 24;
+        finalMinutes = finalMinutes - 60;
+      }
+      calculatedEta = `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
+    }
+
+    //leg es ir aumentando 1 por cada fila
+    //rem es la resta de la distancia total menos la distancia recorrida (cada fila)
+
+
+    //rem
+    let currentRem2 = 0;
+    let currentFuel = 0;
+
+    if (headerData.gph) {
+      const gph = Number(headerData.gph) || 0;
+      currentFuel = gph * (calculatedEte / 60);
+
+      if (index == 0) {
+        if (headerData.initialFuel) {
+          let initialFuel = Number(headerData.initialFuel) || 0;
+          currentRem2 = initialFuel - currentFuel;
+        } else {
+          alert("Por favor, ingresa el Combustible Inicial.");
+          return;
+        }
+      } else {
+        if (flightProps[index - 1].rem2) {
+          let initialFuel = Number(flightProps[index - 1].rem2) || 0;
+          currentRem2 = initialFuel - currentFuel;
+        } else {
+          alert("No se pudo obtener el combustible restante de la fila anterior " + (index - 1) + ".");
+        }
+      }
+      currentRem2 = round(currentRem2, 2);
+      currentFuel = round(currentFuel, 2);
+    } else {
+      alert("Por favor, ingresa el GPH");
+      return;
+    }
 
     // 3. Actualiza el estado de forma inmutable
     const updatedProps = [...flightProps];
@@ -197,6 +262,11 @@ export default function Home() {
       tc1: calculatedTc.toFixed(0),
       tas: calculatedTas.toFixed(0),
       ch: calculatedCh.toFixed(0),
+      ete: calculatedEte.toFixed(0),
+      eta: calculatedEta,
+      rem2: currentRem2.toFixed(2),
+      fuel: currentFuel.toFixed(2),
+      leg: (index + 1).toString(),
       // ...actualiza otros campos calculados...
     };
     setFlightProps(updatedProps);
@@ -229,7 +299,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>GPH</Label>
+              <Label>GPH / LPH</Label>
               <Input type="number" id="gph" value={headerData.gph} onChange={handleHeaderChange} />
             </div>
           </div>
@@ -239,7 +309,7 @@ export default function Home() {
               <Table id="data-table">
                 <TableHeader>
                   <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r" rowSpan={3} colSpan={2}>Check Points</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={2} colSpan={2}>Check Points</TableHead>
                     <TableHead className="text-center border-r bg-gray-200" colSpan={2}>VOR</TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={3}>Course</TableHead>
@@ -283,6 +353,8 @@ export default function Home() {
                   </TableRow>
 
                   <TableRow className="hover:bg-default">
+                    <TableHead className="text-center border-r" colSpan={2}>Distancia</TableHead>
+
                     <TableHead className="text-center border-r" colSpan={2}>Temperatura</TableHead>
 
                     <TableHead className="text-center border-r">TAS</TableHead>
@@ -317,11 +389,12 @@ export default function Home() {
                         <TableCell><Input type="number" name="est" value={props.est} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell><span>{props.ete}</span></TableCell>
                         <TableCell><span>{props.eta}</span></TableCell>
-                        <TableCell><Input type="number" name="fuel" value={props.fuel} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><span>{props.fuel}</span></TableCell>
                       </TableRow>
 
                       <TableRow className="hover:bg-default">
-                        <TableCell colSpan={2} className="text-center"> <Button variant={"default"} className="hover:cursor-pointer" onClick={() => handleCalculateRow(index)}>Calcular</Button> </TableCell>
+                        <TableCell><Button variant={"default"} className="hover:cursor-pointer" onClick={() => handleCalculateRow(index)}>Calcular</Button></TableCell>
+                        <TableCell><Input type="number" name="distance" value={props.distance} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell colSpan={2}><Input type="number" name="temperature" value={props.temperature} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell><span>{props.tc2}</span></TableCell>
                         <TableCell className="p-1"><Input type="number" name="th2" value={props.th2} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
@@ -330,7 +403,7 @@ export default function Home() {
                         <TableCell><Input type="number" name="act" value={props.act} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell><Input type="number" name="ate" value={props.ate} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell><Input type="number" name="ata" value={props.ata} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell><Input type="number" name="rem2" value={props.rem2} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><span>{props.rem2}</span></TableCell>
                       </TableRow>
                     </React.Fragment>
                   ))}
