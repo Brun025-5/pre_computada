@@ -5,9 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { dir } from "console";
-import React from "react";
-import { useState } from "react";
+import { LucideX } from "lucide-react";
+import React, { useState } from "react";
 
 interface FlightProps {
   id: number;
@@ -31,7 +30,7 @@ interface FlightProps {
   ate: string;
   ata: string;
   rem1: string;
-  // Calculated fields
+  
   tas: string;
   tc1: string;
   tc2: string;
@@ -55,7 +54,21 @@ function round(value: number, decimals: number): number {
   return Math.round(value * factor) / factor;
 }
 
+function calculateTotalDistance(flightProps: FlightProps[]): number {
+  let finalDistance = 0;
+  flightProps.forEach((prop, index) => {
+    if (prop.distance) {
+      finalDistance += Number(prop.distance) || 0;
+    } else {
+      throw new Error("Distancia no ingresada en la fila " + (index + 1));
+    }
+  })
+  return finalDistance;
+}
+
 export default function Home() {
+
+  let totalDistance: number;
 
   const [headerData, setHeaderData] = useState({
     initialFuel: '',
@@ -97,15 +110,17 @@ export default function Home() {
     setFlightProps(updatedProps);
   };
 
-  const agregarPunto = () => {
+  const handleAddRow = () => {
     setFlightProps(prev => [...prev, { ...initialFlightState, id: Date.now() }]);
+  };
+
+  const handleDeleteRow = (idToDelete: number) => {
+    const updatedFlightProps = flightProps.filter(prop => prop.id !== idToDelete);
+    setFlightProps(updatedFlightProps);
   };
 
   const handleCalculateRow = (index: number) => {
     const currentRowData = flightProps[index];
-
-    console.log("Calculando datos solo para la fila:", index);
-    console.log(currentRowData);
 
     //Cálculo de TAS
     let calculatedTas = 0;
@@ -160,7 +175,6 @@ export default function Home() {
     }
 
     //cálculo de ch
-
     let calculatedCh = 0;
     if (currentRowData.course && calculatedTc) {
       const course = Number(currentRowData.course) || 0;
@@ -220,11 +234,29 @@ export default function Home() {
       calculatedEta = `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
     }
 
-    //leg es ir aumentando 1 por cada fila
-    //rem es la resta de la distancia total menos la distancia recorrida (cada fila)
+    //rem1 es la resta de la distancia total menos la distancia recorrida (cada fila)
+    let calculatedRem1 = 0;
+    if (typeof totalDistance === 'undefined') {
+      try {
+        totalDistance = calculateTotalDistance(flightProps);
+      } catch (error) {
+        if (error instanceof Error) {
+          alert(error.message);
+          return;
+        } else {
+          alert("Error desconocido al calcular la distancia total.");
+          return;
+        }
+      }
+    }
+    if (index == 0) {
+      calculatedRem1 = totalDistance - (Number(currentRowData.distance) || 0);
+    } else {
+      calculatedRem1 = (Number(flightProps[index - 1].rem1) || 0) - (Number(currentRowData.distance) || 0);
+    }
+    calculatedRem1 = round(calculatedRem1, 0);
 
-
-    //rem
+    //rem2
     let currentRem2 = 0;
     let currentFuel = 0;
 
@@ -255,19 +287,18 @@ export default function Home() {
       return;
     }
 
-    // 3. Actualiza el estado de forma inmutable
     const updatedProps = [...flightProps];
     updatedProps[index] = {
       ...updatedProps[index],
       tc1: calculatedTc.toFixed(0),
       tas: calculatedTas.toFixed(0),
       ch: calculatedCh.toFixed(0),
+      leg: (index + 1).toString(),
+      rem1: calculatedRem1.toFixed(0),
       ete: calculatedEte.toFixed(0),
       eta: calculatedEta,
       rem2: currentRem2.toFixed(2),
       fuel: currentFuel.toFixed(2),
-      leg: (index + 1).toString(),
-      // ...actualiza otros campos calculados...
     };
     setFlightProps(updatedProps);
   };
@@ -283,7 +314,10 @@ export default function Home() {
         <div className="flex flex-col gap-5">
 
           <div className="grid grid-cols-5 items-center gap-3">
-            <Button onClick={agregarPunto} className="w-fit hover:cursor-pointer">Agregar Punto</Button>
+            <div className="flex flex-row gap-3">
+              <Button onClick={handleAddRow} size={"lg"} className="w-fit hover:cursor-pointer">Agregar Punto</Button>
+              <Button size={"lg"} className="w-fit hover:cursor-pointer">Calcular Todo</Button>
+            </div>
 
             <div className="col-start-3 flex flex-col gap-2">
               <Label htmlFor="initialFuel">Combustible Inicial</Label>
@@ -330,17 +364,20 @@ export default function Home() {
                     <TableHead className="text-center border-r" rowSpan={2}>ETA</TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={2}>Fuel</TableHead>
+
+                    <TableHead className="text-center" rowSpan={3}>Acc.</TableHead>
+
                   </TableRow>
 
                   <TableRow className="hover:bg-default">
-                    <TableHead className="text-center border-r" rowSpan={2}>Frecuencia</TableHead>
-                    <TableHead className="text-center border-r" rowSpan={2}>Identificación</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={2}>Frec.</TableHead>
+                    <TableHead className="text-center border-r" rowSpan={2}>Id.</TableHead>
 
                     <TableHead className="text-center border-r">Dirección</TableHead>
                     <TableHead className="text-center border-r">Velocidad</TableHead>
 
                     <TableHead className="text-center border-r p-0">
-                      <Input type="number" id="cas" value={headerData.cas} onChange={handleHeaderChange} />
+                      <Input type="number" id="cas" value={headerData.cas} onChange={handleHeaderChange} className="font-normal"/>
                     </TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={2}>-L<br />+R<br />WCA</TableHead>
@@ -389,12 +426,23 @@ export default function Home() {
                         <TableCell><Input type="number" name="est" value={props.est} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell><span>{props.ete}</span></TableCell>
                         <TableCell><span>{props.eta}</span></TableCell>
-                        <TableCell><span>{props.fuel}</span></TableCell>
+                        <TableCell className="border-r"><span>{props.fuel}</span></TableCell>
+                        <TableCell rowSpan={2}>
+                          <div className={index > 0 ? "flex flex-col items-center gap-2" : ""}>
+                            <Button size={"sm"} onClick={() => handleCalculateRow(index)}>
+                              Calcular
+                            </Button>
+                            {index > 0 &&
+                              <Button variant={"destructive"} size={"icon"} onClick={() => handleDeleteRow(props.id)}>
+                                <LucideX />
+                              </Button>
+                            }
+                          </div>
+                        </TableCell>
                       </TableRow>
 
                       <TableRow className="hover:bg-default">
-                        <TableCell><Button variant={"default"} className="hover:cursor-pointer" onClick={() => handleCalculateRow(index)}>Calcular</Button></TableCell>
-                        <TableCell><Input type="number" name="distance" value={props.distance} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell colSpan={2}><Input type="number" name="distance" value={props.distance} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell colSpan={2}><Input type="number" name="temperature" value={props.temperature} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell><span>{props.tc2}</span></TableCell>
                         <TableCell className="p-1"><Input type="number" name="th2" value={props.th2} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
@@ -403,7 +451,8 @@ export default function Home() {
                         <TableCell><Input type="number" name="act" value={props.act} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell><Input type="number" name="ate" value={props.ate} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell><Input type="number" name="ata" value={props.ata} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell><span>{props.rem2}</span></TableCell>
+                        <TableCell className="border-r"><span>{props.rem2}</span></TableCell>
+
                       </TableRow>
                     </React.Fragment>
                   ))}
@@ -412,13 +461,6 @@ export default function Home() {
               </Table>
             </CardContent>
           </Card>
-
-          {/* <div className="p-4 bg-gray-100 rounded-md mt-4">
-              <h3 className="font-bold">Estado Actual (Header):</h3>
-              <pre>{JSON.stringify(headerData, null, 2)}</pre>
-              <h3 className="font-bold mt-2">Estado Actual (Tabla):</h3>
-              <pre>{JSON.stringify(flightProps, null, 2)}</pre>
-          </div> */}
 
         </div>
       </div>
