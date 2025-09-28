@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LucideX } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "sonner"
 import React, { useState } from "react";
 
 interface FlightProps {
@@ -134,10 +135,10 @@ export default function Home() {
       calculatedTas = round(notRoundedTas, 0);
     } else {
       if (!headerData.cas) {
-        alert("Por favor, ingresa el CAS en el encabezado.");
+        toast.error("Por favor, ingresa el CAS en el encabezado.");
         return;
       } if (!currentRowData.altitude) {
-        alert("Por favor, ingresa la Altitud en la fila " + (index + 1) + ".");
+        toast.error(`Por favor, ingresa la Altitud en la fila ${index + 1}.`);
         return;
       }
     }
