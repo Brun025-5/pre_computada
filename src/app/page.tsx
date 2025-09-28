@@ -30,7 +30,7 @@ interface FlightProps {
   ate: string;
   ata: string;
   rem1: string;
-  
+
   tas: string;
   tc1: string;
   tc2: string;
@@ -303,6 +303,111 @@ export default function Home() {
     setFlightProps(updatedProps);
   };
 
+  const handleCalculateAllRows = () => {
+    // 1. Calcula la distancia total una sola vez al principio.
+    let totalDistance: number;
+    try {
+      totalDistance = calculateTotalDistance(flightProps);
+    } catch (error) {
+      if (error instanceof Error) alert(error.message);
+      return;
+    }
+
+    // 2. Crea un nuevo array que contendrá los resultados finales.
+    const newCalculatedProps: FlightProps[] = [];
+
+    // 3. Itera sobre las filas para calcular todo en secuencia.
+    for (let i = 0; i < flightProps.length; i++) {
+      const currentRowData = flightProps[i];
+
+      // Obtenemos los datos de la fila anterior DESDE EL NUEVO ARRAY
+      // para asegurarnos de que usamos los valores recién calculados.
+      const previousRowData = i > 0 ? newCalculatedProps[i - 1] : null;
+
+      // --- Aquí va la misma lógica de cálculo de 'handleCalculateRow' ---
+      // --- pero adaptada para leer de 'previousRowData' cuando sea necesario ---
+
+      // Valida que los campos necesarios existan antes de continuar
+      if (!headerData.cas || !currentRowData.altitude || !currentRowData.course /* ...etc */) {
+        alert(`Faltan datos en la fila ${i + 1} o en el encabezado.`);
+        return; // Detiene el cálculo si falta un dato esencial
+      }
+
+      // Cálculo de TAS
+      const cas = Number(headerData.cas) || 0;
+      const altitude = Number(currentRowData.altitude) || 0;
+      let notRoundedTas = (((cas * altitude * 0.02) + cas) / 1000) + cas;
+      const calculatedTas = round(notRoundedTas, 0);
+
+      // Cálculo de TC (WCA)
+      const course = Number(currentRowData.course) || 0;
+      const direction = Number(currentRowData.direction) || 0;
+      const velocity = Number(currentRowData.velocity) || 0;
+      const angle = direction - course;
+      let notRoundedTc = (Math.sin(angle * Math.PI / 180) * velocity) / (calculatedTas / 60);
+      const calculatedTc = round(notRoundedTc, 0);
+
+      // Cálculo de CH
+      const th1 = Number(currentRowData.th1) || 0;
+      const mh1 = Number(currentRowData.mh1) || 0;
+      const calculatedCh = round(course + calculatedTc + th1 + mh1, 0);
+
+      // Cálculo de ETE
+      const distance = Number(currentRowData.distance) || 0;
+      let notRoundedEte = (distance * 60) / calculatedTas;
+      const calculatedEte = round(notRoundedEte, 0);
+
+      // Cálculo de ETA
+      let startTime = i === 0 ? headerData.timeOff : previousRowData?.eta;
+      if (!startTime) {
+        alert(`Falta Time Off o el ETA de la fila ${i} no pudo ser calculado.`);
+        return;
+      }
+      const timeParts = startTime.split(':');
+      let initialHours = Number(timeParts[0]) || 0;
+      let initialMinutes = Number(timeParts[1]) || 0;
+      let totalMinutes = initialMinutes + calculatedEte;
+      let finalHours = (initialHours + Math.floor(totalMinutes / 60)) % 24;
+      let finalMinutes = totalMinutes % 60;
+      const calculatedEta = `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
+
+      // Cálculo de Rem1 (Distancia restante)
+      const prevRem1 = i === 0 ? totalDistance : Number(previousRowData?.rem1) || 0;
+      const calculatedRem1 = round(prevRem1 - distance, 0);
+
+      // Cálculo de Rem2 (Combustible restante)
+      const gph = Number(headerData.gph) || 0;
+      if (gph === 0) {
+        alert("Por favor, ingresa el GPH.");
+        return;
+      }
+      const fuelUsed = round(gph * (calculatedEte / 60), 2);
+      const initialFuel = i === 0 ? Number(headerData.initialFuel) : Number(previousRowData?.rem2) || 0;
+      if (initialFuel === 0 && i === 0) {
+        alert("Por favor, ingresa el Combustible Inicial.");
+        return;
+      }
+      const currentRem2 = round(initialFuel - fuelUsed, 2);
+
+      // Añade la fila completamente calculada al nuevo array
+      newCalculatedProps.push({
+        ...currentRowData, // Mantiene los datos de input originales
+        tas: calculatedTas.toFixed(0),
+        tc1: calculatedTc.toFixed(0),
+        ch: calculatedCh.toFixed(0),
+        leg: (i + 1).toString(),
+        ete: calculatedEte.toFixed(0),
+        eta: calculatedEta,
+        rem1: calculatedRem1.toFixed(0),
+        fuel: fuelUsed.toFixed(2),
+        rem2: currentRem2.toFixed(2),
+      });
+    }
+
+    // 4. Llama a setFlightProps UNA SOLA VEZ con el array final.
+    setFlightProps(newCalculatedProps);
+  };
+
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -316,7 +421,7 @@ export default function Home() {
           <div className="grid grid-cols-5 items-center gap-3">
             <div className="flex flex-row gap-3">
               <Button onClick={handleAddRow} size={"lg"} className="w-fit hover:cursor-pointer">Agregar Punto</Button>
-              <Button size={"lg"} className="w-fit hover:cursor-pointer">Calcular Todo</Button>
+              <Button onClick={handleCalculateAllRows} size={"lg"} className="w-fit hover:cursor-pointer">Calcular Todo</Button>
             </div>
 
             <div className="col-start-3 flex flex-col gap-2">
@@ -377,7 +482,7 @@ export default function Home() {
                     <TableHead className="text-center border-r">Velocidad</TableHead>
 
                     <TableHead className="text-center border-r p-0">
-                      <Input type="number" id="cas" value={headerData.cas} onChange={handleHeaderChange} className="font-normal"/>
+                      <Input type="number" id="cas" value={headerData.cas} onChange={handleHeaderChange} className="font-normal" />
                     </TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={2}>-L<br />+R<br />WCA</TableHead>
@@ -452,7 +557,6 @@ export default function Home() {
                         <TableCell><Input type="number" name="ate" value={props.ate} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell><Input type="number" name="ata" value={props.ata} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell className="border-r"><span>{props.rem2}</span></TableCell>
-
                       </TableRow>
                     </React.Fragment>
                   ))}
