@@ -9,7 +9,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner"
 import React, { useState } from "react";
 
-interface FlightProps {
+import {
+  calculateTas,
+  calculateTc,
+  calculateCh,
+  calculateEte,
+  calculateEta,
+  calculateFuelUsed,
+  calculateTotalDistance,
+  round
+} from "@/lib/calculations";
+
+export interface FlightProps {
   id: number;
   cp1: string;
   cp2: string;
@@ -50,22 +61,6 @@ const initialFlightState: FlightProps = {
   tas: '', tc1: '', tc2: '', ch: '', leg: '', ete: '', eta: '', rem2: ''
 };
 
-function round(value: number, decimals: number): number {
-  const factor = Math.pow(10, decimals);
-  return Math.round(value * factor) / factor;
-}
-
-function calculateTotalDistance(flightProps: FlightProps[]): number {
-  let finalDistance = 0;
-  flightProps.forEach((prop, index) => {
-    if (prop.distance) {
-      finalDistance += Number(prop.distance) || 0;
-    } else {
-      throw new Error("Distancia no ingresada en la fila " + (index + 1));
-    }
-  })
-  return finalDistance;
-}
 
 export default function Home() {
 
@@ -130,9 +125,7 @@ export default function Home() {
       const cas = Number(headerData.cas) || 0;
       const altitude = Number(currentRowData.altitude) || 0;
 
-      let notRoundedTas = (((cas * altitude * 0.02) + cas) / 1000) + cas
-
-      calculatedTas = round(notRoundedTas, 0);
+      calculatedTas = calculateTas(cas, altitude);
     } else {
       if (!headerData.cas) {
         toast.error("Por favor, ingresa el CAS en el encabezado.");
@@ -151,10 +144,7 @@ export default function Home() {
       const direction = Number(currentRowData.direction) || 0;
       const velocity = Number(currentRowData.velocity) || 0;
 
-      const angle = direction - course;
-
-      let notRoundedTc = (Math.sin(angle * Math.PI / 180) * velocity) / (calculatedTas / 60);
-      calculatedTc = round(notRoundedTc, 0);
+      calculatedTc = calculateTc(course, direction, velocity, calculatedTas);
     } else {
       if (!currentRowData.direction) {
         alert("Por favor, ingresa la Dirección del viento en la fila " + (index + 1) + ".");
@@ -179,60 +169,36 @@ export default function Home() {
     let calculatedCh = 0;
     if (currentRowData.course && calculatedTc) {
       const course = Number(currentRowData.course) || 0;
-      const tc = Number(currentRowData.tc1) || 0;
+      const tc = calculatedTc;
       const mh = Number(currentRowData.mh1) || 0;
       const th = Number(currentRowData.th1) || 0;
 
-      calculatedCh = round(course + tc + mh + th, 0);
+      calculatedCh = calculateCh(course, tc, th, mh);
     }
 
     //cálculo de ete
     let calculatedEte = 0;
     if (currentRowData.distance && calculatedTas) {
       const distance = Number(currentRowData.distance) || 0;
-      let notRoeundedEte = (distance * 60) / calculatedTas;
-      calculatedEte = round(notRoeundedEte, 0);
+      calculatedEte = calculateEte(distance, calculatedTas);
     }
 
     //cálculo de eta
     let calculatedEta = "";
-    let timeParts: string[] = [];
     if (index == 0) {
-      if (headerData.timeOff) {
-        timeParts = headerData.timeOff.split(':');
-      } else {
-        alert("Por favor, ingresa el Time Off.");
+      if(headerData.timeOff){
+        calculatedEta = calculateEta(headerData.timeOff, calculatedEte);
+      }else{
+        toast.error("Por favor, ingresa el Time Off.");
         return;
       }
     } else {
-      if (flightProps[index - 1].eta) {
-        timeParts = flightProps[index - 1].eta.split(':');
+      if(flightProps[index - 1].eta) {
+        calculatedEta = calculateEta(flightProps[index - 1].eta, calculatedEte)
       } else {
-        alert("No se pudo obtener el ETA de la fila anterior " + (index - 1) + ".");
+        toast.error("No se pudo obtener el ETA de la fila anterior " + (index - 1) + ".");
         return;
       }
-    }
-
-    if (calculatedEte >= 60) {
-      let hoursToAdd = Math.floor(calculatedEte / 60);
-      let minutesToAdd = calculatedEte % 60;
-      let initialHours = Number(timeParts[0]) || 0;
-      let initialMinutes = Number(timeParts[1]) || 0;
-      let totalMinutes = initialMinutes + minutesToAdd;
-      let extraHoursFromMinutes = Math.floor(totalMinutes / 60);
-      let finalMinutes = totalMinutes % 60;
-      let finalHours = (initialHours + hoursToAdd + extraHoursFromMinutes) % 24; // Formato 24 horas
-      calculatedEta = `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
-    } else {
-      let initialMinutes = Number(timeParts[1]) || 0;
-      let minutesToAdd = calculatedEte;
-      let finalMinutes = initialMinutes + minutesToAdd;
-      let finalHours = Number(timeParts[0]) || 0;
-      if (finalMinutes >= 60) {
-        finalHours = (finalHours + 1) % 24;
-        finalMinutes = finalMinutes - 60;
-      }
-      calculatedEta = `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
     }
 
     //rem1 es la resta de la distancia total menos la distancia recorrida (cada fila)
@@ -242,10 +208,10 @@ export default function Home() {
         totalDistance = calculateTotalDistance(flightProps);
       } catch (error) {
         if (error instanceof Error) {
-          alert(error.message);
+          toast.error(error.message);
           return;
         } else {
-          alert("Error desconocido al calcular la distancia total.");
+          toast.error("Error desconocido al calcular la distancia total.");
           return;
         }
       }
@@ -263,7 +229,7 @@ export default function Home() {
 
     if (headerData.gph) {
       const gph = Number(headerData.gph) || 0;
-      currentFuel = gph * (calculatedEte / 60);
+      currentFuel = calculateFuelUsed(gph, calculatedEte);
 
       if (index == 0) {
         if (headerData.initialFuel) {
@@ -282,7 +248,6 @@ export default function Home() {
         }
       }
       currentRem2 = round(currentRem2, 2);
-      currentFuel = round(currentFuel, 2);
     } else {
       alert("Por favor, ingresa el GPH");
       return;
