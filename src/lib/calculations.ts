@@ -31,9 +31,9 @@ export function calculateEte(distance: number, tas: number): number {
 export function calculateEta(startTime: string, eteMinutes: number): string {
     const timeParts = startTime.split(':');
     const initialHours = Number(timeParts[0]) || 0;
-    let initialMinutes = Number(timeParts[1]) || 0;
+    const initialMinutes = Number(timeParts[1]) || 0;
 
-    let totalMinutes = initialMinutes + eteMinutes;
+    const totalMinutes = initialMinutes + eteMinutes;
     const finalHours = (initialHours + Math.floor(totalMinutes / 60)) % 24;
     const finalMinutes = totalMinutes % 60;
 

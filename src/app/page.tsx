@@ -147,19 +147,19 @@ export default function Home() {
       calculatedTc = calculateTc(course, direction, velocity, calculatedTas);
     } else {
       if (!currentRowData.direction) {
-        alert("Por favor, ingresa la Dirección del viento en la fila " + (index + 1) + ".");
+        toast.error("Por favor, ingresa la Dirección del viento en la fila " + (index + 1) + ".");
         return;
       }
       if (!currentRowData.course) {
-        alert("Por favor, ingresa el Curso en la fila " + (index + 1) + ".");
+        toast.error("Por favor, ingresa el Curso en la fila " + (index + 1) + ".");
         return;
       }
       if (!currentRowData.velocity) {
-        alert("Por favor, ingresa la Velocidad del viento en la fila " + (index + 1) + ".");
+        toast.error("Por favor, ingresa la Velocidad del viento en la fila " + (index + 1) + ".");
         return;
       }
       if (calculatedTas == 0) {
-        alert("TAS = 0, por favor revisa los datos.");
+        toast.error("TAS = 0, por favor revisa los datos.");
         return;
       }
 
@@ -233,23 +233,23 @@ export default function Home() {
 
       if (index == 0) {
         if (headerData.initialFuel) {
-          let initialFuel = Number(headerData.initialFuel) || 0;
+          const initialFuel = Number(headerData.initialFuel) || 0;
           currentRem2 = initialFuel - currentFuel;
         } else {
-          alert("Por favor, ingresa el Combustible Inicial.");
+          toast.error("Por favor, ingresa el Combustible Inicial.");
           return;
         }
       } else {
         if (flightProps[index - 1].rem2) {
-          let initialFuel = Number(flightProps[index - 1].rem2) || 0;
+          const initialFuel = Number(flightProps[index - 1].rem2) || 0;
           currentRem2 = initialFuel - currentFuel;
         } else {
-          alert("No se pudo obtener el combustible restante de la fila anterior " + (index - 1) + ".");
+          toast.error("No se pudo obtener el combustible restante de la fila anterior " + (index - 1) + ".");
         }
       }
       currentRem2 = round(currentRem2, 2);
     } else {
-      alert("Por favor, ingresa el GPH");
+      toast.error("Por favor, ingresa el GPH");
       return;
     }
 
@@ -270,33 +270,25 @@ export default function Home() {
   };
 
   const handleCalculateAllRows = () => {
-    // 1. Calcula la distancia total una sola vez al principio.
+
     let totalDistance: number;
     try {
       totalDistance = calculateTotalDistance(flightProps);
     } catch (error) {
-      if (error instanceof Error) alert(error.message);
+      if (error instanceof Error) toast.error(error.message);
       return;
     }
 
-    // 2. Crea un nuevo array que contendrá los resultados finales.
     const newCalculatedProps: FlightProps[] = [];
 
-    // 3. Itera sobre las filas para calcular todo en secuencia.
     for (let i = 0; i < flightProps.length; i++) {
       const currentRowData = flightProps[i];
 
-      // Obtenemos los datos de la fila anterior DESDE EL NUEVO ARRAY
-      // para asegurarnos de que usamos los valores recién calculados.
       const previousRowData = i > 0 ? newCalculatedProps[i - 1] : null;
 
-      // --- Aquí va la misma lógica de cálculo de 'handleCalculateRow' ---
-      // --- pero adaptada para leer de 'previousRowData' cuando sea necesario ---
-
-      // Valida que los campos necesarios existan antes de continuar
-      if (!headerData.cas || !currentRowData.altitude || !currentRowData.course /* ...etc */) {
-        alert(`Faltan datos en la fila ${i + 1} o en el encabezado.`);
-        return; // Detiene el cálculo si falta un dato esencial
+      if (!headerData.cas || !currentRowData.altitude || !currentRowData.course) {
+        toast.error(`Faltan datos en la fila ${i + 1} o en el encabezado.`);
+        return;
       }
 
       // Cálculo de TAS
@@ -310,7 +302,7 @@ export default function Home() {
       const direction = Number(currentRowData.direction) || 0;
       const velocity = Number(currentRowData.velocity) || 0;
       const angle = direction - course;
-      let notRoundedTc = (Math.sin(angle * Math.PI / 180) * velocity) / (calculatedTas / 60);
+      const notRoundedTc = (Math.sin(angle * Math.PI / 180) * velocity) / (calculatedTas / 60);
       const calculatedTc = round(notRoundedTc, 0);
 
       // Cálculo de CH
@@ -320,44 +312,41 @@ export default function Home() {
 
       // Cálculo de ETE
       const distance = Number(currentRowData.distance) || 0;
-      let notRoundedEte = (distance * 60) / calculatedTas;
+      const notRoundedEte = (distance * 60) / calculatedTas;
       const calculatedEte = round(notRoundedEte, 0);
 
       // Cálculo de ETA
-      let startTime = i === 0 ? headerData.timeOff : previousRowData?.eta;
+      const startTime = i === 0 ? headerData.timeOff : previousRowData?.eta;
       if (!startTime) {
-        alert(`Falta Time Off o el ETA de la fila ${i} no pudo ser calculado.`);
+        toast.error(`Falta Time Off o el ETA de la fila ${i} no pudo ser calculado.`);
         return;
       }
       const timeParts = startTime.split(':');
-      let initialHours = Number(timeParts[0]) || 0;
-      let initialMinutes = Number(timeParts[1]) || 0;
-      let totalMinutes = initialMinutes + calculatedEte;
-      let finalHours = (initialHours + Math.floor(totalMinutes / 60)) % 24;
-      let finalMinutes = totalMinutes % 60;
+      const initialHours = Number(timeParts[0]) || 0;
+      const initialMinutes = Number(timeParts[1]) || 0;
+      const totalMinutes = initialMinutes + calculatedEte;
+      const finalHours = (initialHours + Math.floor(totalMinutes / 60)) % 24;
+      const finalMinutes = totalMinutes % 60;
       const calculatedEta = `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
 
-      // Cálculo de Rem1 (Distancia restante)
       const prevRem1 = i === 0 ? totalDistance : Number(previousRowData?.rem1) || 0;
       const calculatedRem1 = round(prevRem1 - distance, 0);
 
-      // Cálculo de Rem2 (Combustible restante)
       const gph = Number(headerData.gph) || 0;
       if (gph === 0) {
-        alert("Por favor, ingresa el GPH.");
+        toast.error("Por favor, ingresa el GPH.");
         return;
       }
       const fuelUsed = round(gph * (calculatedEte / 60), 2);
       const initialFuel = i === 0 ? Number(headerData.initialFuel) : Number(previousRowData?.rem2) || 0;
       if (initialFuel === 0 && i === 0) {
-        alert("Por favor, ingresa el Combustible Inicial.");
+        toast.error("Por favor, ingresa el Combustible Inicial.");
         return;
       }
       const currentRem2 = round(initialFuel - fuelUsed, 2);
 
-      // Añade la fila completamente calculada al nuevo array
       newCalculatedProps.push({
-        ...currentRowData, // Mantiene los datos de input originales
+        ...currentRowData,
         tas: calculatedTas.toFixed(0),
         tc1: calculatedTc.toFixed(0),
         ch: calculatedCh.toFixed(0),
@@ -370,7 +359,6 @@ export default function Home() {
       });
     }
 
-    // 4. Llama a setFlightProps UNA SOLA VEZ con el array final.
     setFlightProps(newCalculatedProps);
   };
 
