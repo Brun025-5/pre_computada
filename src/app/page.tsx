@@ -294,7 +294,7 @@ export default function Home() {
       // Cálculo de TAS
       const cas = Number(headerData.cas) || 0;
       const altitude = Number(currentRowData.altitude) || 0;
-      let notRoundedTas = (((cas * altitude * 0.02) + cas) / 1000) + cas;
+      const notRoundedTas = (((cas * altitude * 0.02) + cas) / 1000) + cas;
       const calculatedTas = round(notRoundedTas, 0);
 
       // Cálculo de TC (WCA)
