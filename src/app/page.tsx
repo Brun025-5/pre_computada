@@ -147,19 +147,19 @@ export default function Home() {
       calculatedTc = calculateTc(course, direction, velocity, calculatedTas);
     } else {
       if (!currentRowData.direction) {
-        alert("Por favor, ingresa la Dirección del viento en la fila " + (index + 1) + ".");
+        toast.error("Por favor, ingresa la Dirección del viento en la fila " + (index + 1) + ".");
         return;
       }
       if (!currentRowData.course) {
-        alert("Por favor, ingresa el Curso en la fila " + (index + 1) + ".");
+        toast.error("Por favor, ingresa el Curso en la fila " + (index + 1) + ".");
         return;
       }
       if (!currentRowData.velocity) {
-        alert("Por favor, ingresa la Velocidad del viento en la fila " + (index + 1) + ".");
+        toast.error("Por favor, ingresa la Velocidad del viento en la fila " + (index + 1) + ".");
         return;
       }
       if (calculatedTas == 0) {
-        alert("TAS = 0, por favor revisa los datos.");
+        toast.error("TAS = 0, por favor revisa los datos.");
         return;
       }
 
@@ -236,7 +236,7 @@ export default function Home() {
           let initialFuel = Number(headerData.initialFuel) || 0;
           currentRem2 = initialFuel - currentFuel;
         } else {
-          alert("Por favor, ingresa el Combustible Inicial.");
+          toast.error("Por favor, ingresa el Combustible Inicial.");
           return;
         }
       } else {
@@ -244,12 +244,12 @@ export default function Home() {
           let initialFuel = Number(flightProps[index - 1].rem2) || 0;
           currentRem2 = initialFuel - currentFuel;
         } else {
-          alert("No se pudo obtener el combustible restante de la fila anterior " + (index - 1) + ".");
+          toast.error("No se pudo obtener el combustible restante de la fila anterior " + (index - 1) + ".");
         }
       }
       currentRem2 = round(currentRem2, 2);
     } else {
-      alert("Por favor, ingresa el GPH");
+      toast.error("Por favor, ingresa el GPH");
       return;
     }
 
@@ -275,7 +275,7 @@ export default function Home() {
     try {
       totalDistance = calculateTotalDistance(flightProps);
     } catch (error) {
-      if (error instanceof Error) alert(error.message);
+      if (error instanceof Error) toast.error(error.message);
       return;
     }
 
@@ -295,7 +295,7 @@ export default function Home() {
 
       // Valida que los campos necesarios existan antes de continuar
       if (!headerData.cas || !currentRowData.altitude || !currentRowData.course /* ...etc */) {
-        alert(`Faltan datos en la fila ${i + 1} o en el encabezado.`);
+        toast.error(`Faltan datos en la fila ${i + 1} o en el encabezado.`);
         return; // Detiene el cálculo si falta un dato esencial
       }
 
@@ -326,7 +326,7 @@ export default function Home() {
       // Cálculo de ETA
       let startTime = i === 0 ? headerData.timeOff : previousRowData?.eta;
       if (!startTime) {
-        alert(`Falta Time Off o el ETA de la fila ${i} no pudo ser calculado.`);
+        toast.error(`Falta Time Off o el ETA de la fila ${i} no pudo ser calculado.`);
         return;
       }
       const timeParts = startTime.split(':');
@@ -344,13 +344,13 @@ export default function Home() {
       // Cálculo de Rem2 (Combustible restante)
       const gph = Number(headerData.gph) || 0;
       if (gph === 0) {
-        alert("Por favor, ingresa el GPH.");
+        toast.error("Por favor, ingresa el GPH.");
         return;
       }
       const fuelUsed = round(gph * (calculatedEte / 60), 2);
       const initialFuel = i === 0 ? Number(headerData.initialFuel) : Number(previousRowData?.rem2) || 0;
       if (initialFuel === 0 && i === 0) {
-        alert("Por favor, ingresa el Combustible Inicial.");
+        toast.error("Por favor, ingresa el Combustible Inicial.");
         return;
       }
       const currentRem2 = round(initialFuel - fuelUsed, 2);
