@@ -62,12 +62,12 @@ export default function Home() {
     const { name, value, type } = e.target;
 
 
-    if (type === "number") {
-      const regex = /^[0-9]*\.?[0-9]*$/;
-      if (!regex.test(value)) {
-        return;
-      }
-    }
+    // if (type === "number") {
+    //   const regex = /^[0-9]*\.?[0-9]*$/;
+    //   if (!regex.test(value)) {
+    //     return;
+    //   }
+    // }
 
     const updatedProps = [...flightProps];
     updatedProps[index] = { ...updatedProps[index], [name]: value };
@@ -83,263 +83,109 @@ export default function Home() {
     setFlightProps(updatedFlightProps);
   };
 
-  const handleCalculateRow = (index: number) => {
-    const currentRowData = flightProps[index];
+  const calculateSingleLeg = (currentRow: FlightProps, previousRow: FlightProps | null, headerData: { cas: string; timeOff: string; gph: string; initialFuel: string }, totalDistance: number): FlightProps => {
 
-    //Cálculo de TAS
-    let calculatedTas = 0;
+    if (!headerData.cas) throw new Error("Por favor, ingresa el CAS.");
+    if (!currentRow.altitude) throw new Error("Falta la Altitud.");
+    if (!currentRow.course) throw new Error("Falta el Curso.");
+    if (!currentRow.direction) throw new Error("Falta la Dirección del viento.");
+    if (!currentRow.velocity) throw new Error("Falta la Velocidad del viento.");
 
-    if (headerData.cas && currentRowData.altitude) {
-      const cas = Number(headerData.cas) || 0;
-      const altitude = Number(currentRowData.altitude) || 0;
+    const cas = Number(headerData.cas);
+    const altitude = Number(currentRow.altitude);
+    const course = Number(currentRow.course);
+    const direction = Number(currentRow.direction);
+    const velocity = Number(currentRow.velocity);
+    const distance = Number(currentRow.distance);
+    const th1 = Number(currentRow.th1);
+    const mh1 = Number(currentRow.mh1);
 
-      calculatedTas = calculateTas(cas, altitude);
-    } else {
-      if (!headerData.cas) {
-        toast.error("Por favor, ingresa el CAS en el encabezado.");
-        return;
-      } if (!currentRowData.altitude) {
-        toast.error(`Por favor, ingresa la Altitud en la fila ${index + 1}.`);
-        return;
-      }
-    }
+    const calculatedTas = calculateTas(cas, altitude);
+    if (calculatedTas === 0) throw new Error("El TAS no puede ser 0. Revisa los datos.");
 
-    //cálculo de tc
-    let calculatedTc = 0;
+    const calculatedTc = calculateTc(course, direction, velocity, calculatedTas);
+    const calculatedCh = calculateCh(course, calculatedTc, th1, mh1);
+    const calculatedEte = calculateEte(distance, calculatedTas);
 
-    if (currentRowData.direction && currentRowData.course && currentRowData.velocity && (calculatedTas != 0)) {
-      const course = Number(currentRowData.course) || 0;
-      const direction = Number(currentRowData.direction) || 0;
-      const velocity = Number(currentRowData.velocity) || 0;
+    const startTime = previousRow ? previousRow.eta : headerData.timeOff;
+    if (!startTime) throw new Error("Falta Time Off o el ETA de la fila anterior.");
+    const calculatedEta = calculateEta(startTime, calculatedEte);
 
-      calculatedTc = calculateTc(course, direction, velocity, calculatedTas);
-    } else {
-      if (!currentRowData.direction) {
-        toast.error("Por favor, ingresa la Dirección del viento en la fila " + (index + 1) + ".");
-        return;
-      }
-      if (!currentRowData.course) {
-        toast.error("Por favor, ingresa el Curso en la fila " + (index + 1) + ".");
-        return;
-      }
-      if (!currentRowData.velocity) {
-        toast.error("Por favor, ingresa la Velocidad del viento en la fila " + (index + 1) + ".");
-        return;
-      }
-      if (calculatedTas == 0) {
-        toast.error("TAS = 0, por favor revisa los datos.");
-        return;
-      }
+    const prevRem1 = previousRow ? Number(previousRow.rem1) : totalDistance;
+    const calculatedRem1 = round(prevRem1 - distance, 0);
 
-    }
+    const gph = Number(headerData.gph);
+    if (!gph) throw new Error("Por favor, ingresa el GPH.");
+    const fuelUsed = calculateFuelUsed(gph, calculatedEte);
+    const initialFuel = previousRow ? Number(previousRow.rem2) : Number(headerData.initialFuel);
+    if (!initialFuel) throw new Error("Falta el Combustible Inicial o el restante de la fila anterior.");
+    const currentRem2 = round(initialFuel - fuelUsed, 2);
 
-    //cálculo de ch
-    let calculatedCh = 0;
-    if (currentRowData.course && calculatedTc) {
-      const course = Number(currentRowData.course) || 0;
-      const tc = calculatedTc;
-      const mh = Number(currentRowData.mh1) || 0;
-      const th = Number(currentRowData.th1) || 0;
-
-      calculatedCh = calculateCh(course, tc, th, mh);
-    }
-
-    //cálculo de ete
-    let calculatedEte = 0;
-    if (currentRowData.distance && calculatedTas) {
-      const distance = Number(currentRowData.distance) || 0;
-      calculatedEte = calculateEte(distance, calculatedTas);
-    }
-
-    //cálculo de eta
-    let calculatedEta = "";
-    if (index == 0) {
-      if(headerData.timeOff){
-        calculatedEta = calculateEta(headerData.timeOff, calculatedEte);
-      }else{
-        toast.error("Por favor, ingresa el Time Off.");
-        return;
-      }
-    } else {
-      if(flightProps[index - 1].eta) {
-        calculatedEta = calculateEta(flightProps[index - 1].eta, calculatedEte)
-      } else {
-        toast.error("No se pudo obtener el ETA de la fila anterior " + (index - 1) + ".");
-        return;
-      }
-    }
-
-    //rem1 es la resta de la distancia total menos la distancia recorrida (cada fila)
-    let calculatedRem1 = 0;
-    if (typeof totalDistance === 'undefined') {
-      try {
-        totalDistance = calculateTotalDistance(flightProps);
-      } catch (error) {
-        if (error instanceof Error) {
-          toast.error(error.message);
-          return;
-        } else {
-          toast.error("Error desconocido al calcular la distancia total.");
-          return;
-        }
-      }
-    }
-    if (index == 0) {
-      calculatedRem1 = totalDistance - (Number(currentRowData.distance) || 0);
-    } else {
-      calculatedRem1 = (Number(flightProps[index - 1].rem1) || 0) - (Number(currentRowData.distance) || 0);
-    }
-    calculatedRem1 = round(calculatedRem1, 0);
-
-    //rem2
-    let currentRem2 = 0;
-    let currentFuel = 0;
-
-    if (headerData.gph) {
-      const gph = Number(headerData.gph) || 0;
-      currentFuel = calculateFuelUsed(gph, calculatedEte);
-
-      if (index == 0) {
-        if (headerData.initialFuel) {
-          let initialFuel = Number(headerData.initialFuel) || 0;
-          currentRem2 = initialFuel - currentFuel;
-        } else {
-          toast.error("Por favor, ingresa el Combustible Inicial.");
-          return;
-        }
-      } else {
-        if (flightProps[index - 1].rem2) {
-          let initialFuel = Number(flightProps[index - 1].rem2) || 0;
-          currentRem2 = initialFuel - currentFuel;
-        } else {
-          toast.error("No se pudo obtener el combustible restante de la fila anterior " + (index - 1) + ".");
-        }
-      }
-      currentRem2 = round(currentRem2, 2);
-    } else {
-      toast.error("Por favor, ingresa el GPH");
-      return;
-    }
-
-    const updatedProps = [...flightProps];
-    updatedProps[index] = {
-      ...updatedProps[index],
-      tc1: calculatedTc.toFixed(0),
+    return {
+      ...currentRow,
       tas: calculatedTas.toFixed(0),
+      tc1: calculatedTc.toFixed(0),
       ch: calculatedCh.toFixed(0),
-      leg: (index + 1).toString(),
+      leg: (currentRow.id + 1).toString(),
       rem1: calculatedRem1.toFixed(0),
       ete: calculatedEte.toFixed(0),
       eta: calculatedEta,
       rem2: currentRem2.toFixed(2),
-      fuel: currentFuel.toFixed(2),
+      fuel: fuelUsed.toFixed(2),
     };
-    setFlightProps(updatedProps);
+  };
+
+  const handleCalculateRow = (index: number) => {
+    try {
+      const totalDistance = calculateTotalDistance(flightProps);
+      const currentRow = flightProps[index];
+      const previousRow = index > 0 ? flightProps[index - 1] : null;
+
+      let calculatedLeg = calculateSingleLeg(currentRow, previousRow, headerData, totalDistance);
+
+      calculatedLeg = {
+        ...calculatedLeg,
+        leg: (index + 1).toString(),
+      };
+
+      const updatedLegs = [...flightProps];
+      updatedLegs[index] = calculatedLeg;
+      setFlightProps(updatedLegs);
+      toast.success(`Fila ${index + 1} calculada.`);
+
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    }
   };
 
   const handleCalculateAllRows = () => {
-    // 1. Calcula la distancia total una sola vez al principio.
-    let totalDistance: number;
     try {
-      totalDistance = calculateTotalDistance(flightProps);
+      const totalDistance = calculateTotalDistance(flightProps);
+      const newCalculatedProps: FlightProps[] = [];
+
+      for (let i = 0; i < flightProps.length; i++) {
+        const currentRow = flightProps[i];
+        const previousRow = i > 0 ? newCalculatedProps[i - 1] : null;
+
+        let calculatedLeg = calculateSingleLeg(currentRow, previousRow, headerData, totalDistance);
+        calculatedLeg = {
+          ...calculatedLeg,
+          leg: (i + 1).toString(),
+        };
+
+        newCalculatedProps.push(calculatedLeg);
+      }
+
+      setFlightProps(newCalculatedProps);
+      toast.success("¡Todos los puntos han sido calculados!");
+
     } catch (error) {
-      if (error instanceof Error) toast.error(error.message);
-      return;
+      if (error instanceof Error) {
+        toast.error(`Error en el cálculo: ${error.message}`);
+      }
     }
-
-    // 2. Crea un nuevo array que contendrá los resultados finales.
-    const newCalculatedProps: FlightProps[] = [];
-
-    // 3. Itera sobre las filas para calcular todo en secuencia.
-    for (let i = 0; i < flightProps.length; i++) {
-      const currentRowData = flightProps[i];
-
-      // Obtenemos los datos de la fila anterior DESDE EL NUEVO ARRAY
-      // para asegurarnos de que usamos los valores recién calculados.
-      const previousRowData = i > 0 ? newCalculatedProps[i - 1] : null;
-
-      // --- Aquí va la misma lógica de cálculo de 'handleCalculateRow' ---
-      // --- pero adaptada para leer de 'previousRowData' cuando sea necesario ---
-
-      // Valida que los campos necesarios existan antes de continuar
-      if (!headerData.cas || !currentRowData.altitude || !currentRowData.course /* ...etc */) {
-        toast.error(`Faltan datos en la fila ${i + 1} o en el encabezado.`);
-        return; // Detiene el cálculo si falta un dato esencial
-      }
-
-      // Cálculo de TAS
-      const cas = Number(headerData.cas) || 0;
-      const altitude = Number(currentRowData.altitude) || 0;
-      let notRoundedTas = (((cas * altitude * 0.02) + cas) / 1000) + cas;
-      const calculatedTas = round(notRoundedTas, 0);
-
-      // Cálculo de TC (WCA)
-      const course = Number(currentRowData.course) || 0;
-      const direction = Number(currentRowData.direction) || 0;
-      const velocity = Number(currentRowData.velocity) || 0;
-      const angle = direction - course;
-      let notRoundedTc = (Math.sin(angle * Math.PI / 180) * velocity) / (calculatedTas / 60);
-      const calculatedTc = round(notRoundedTc, 0);
-
-      // Cálculo de CH
-      const th1 = Number(currentRowData.th1) || 0;
-      const mh1 = Number(currentRowData.mh1) || 0;
-      const calculatedCh = round(course + calculatedTc + th1 + mh1, 0);
-
-      // Cálculo de ETE
-      const distance = Number(currentRowData.distance) || 0;
-      let notRoundedEte = (distance * 60) / calculatedTas;
-      const calculatedEte = round(notRoundedEte, 0);
-
-      // Cálculo de ETA
-      let startTime = i === 0 ? headerData.timeOff : previousRowData?.eta;
-      if (!startTime) {
-        toast.error(`Falta Time Off o el ETA de la fila ${i} no pudo ser calculado.`);
-        return;
-      }
-      const timeParts = startTime.split(':');
-      let initialHours = Number(timeParts[0]) || 0;
-      let initialMinutes = Number(timeParts[1]) || 0;
-      let totalMinutes = initialMinutes + calculatedEte;
-      let finalHours = (initialHours + Math.floor(totalMinutes / 60)) % 24;
-      let finalMinutes = totalMinutes % 60;
-      const calculatedEta = `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
-
-      // Cálculo de Rem1 (Distancia restante)
-      const prevRem1 = i === 0 ? totalDistance : Number(previousRowData?.rem1) || 0;
-      const calculatedRem1 = round(prevRem1 - distance, 0);
-
-      // Cálculo de Rem2 (Combustible restante)
-      const gph = Number(headerData.gph) || 0;
-      if (gph === 0) {
-        toast.error("Por favor, ingresa el GPH.");
-        return;
-      }
-      const fuelUsed = round(gph * (calculatedEte / 60), 2);
-      const initialFuel = i === 0 ? Number(headerData.initialFuel) : Number(previousRowData?.rem2) || 0;
-      if (initialFuel === 0 && i === 0) {
-        toast.error("Por favor, ingresa el Combustible Inicial.");
-        return;
-      }
-      const currentRem2 = round(initialFuel - fuelUsed, 2);
-
-      // Añade la fila completamente calculada al nuevo array
-      newCalculatedProps.push({
-        ...currentRowData, // Mantiene los datos de input originales
-        tas: calculatedTas.toFixed(0),
-        tc1: calculatedTc.toFixed(0),
-        ch: calculatedCh.toFixed(0),
-        leg: (i + 1).toString(),
-        ete: calculatedEte.toFixed(0),
-        eta: calculatedEta,
-        rem1: calculatedRem1.toFixed(0),
-        fuel: fuelUsed.toFixed(2),
-        rem2: currentRem2.toFixed(2),
-      });
-    }
-
-    // 4. Llama a setFlightProps UNA SOLA VEZ con el array final.
-    setFlightProps(newCalculatedProps);
   };
 
   return (
@@ -459,7 +305,7 @@ export default function Home() {
                         <TableCell rowSpan={2}><span>{props.tas}</span></TableCell>
                         <TableCell><span>{props.tc1}</span></TableCell>
                         <TableCell className="p-1"><Input type="number" name="th1" value={props.th1} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell className="p-1"><Input type="number" name="mh1" value={props.mh1} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell className="p-1"><Input type="number" name="mh1" min={-100} value={props.mh1} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
                         <TableCell rowSpan={2}><span>{props.ch}</span></TableCell>
                         <TableCell><span>{props.leg}</span></TableCell>
                         <TableCell><Input type="number" name="est" value={props.est} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
