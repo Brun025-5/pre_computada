@@ -32,8 +32,6 @@ const initialFlightState: FlightProps = {
 
 export default function Home() {
 
-  let totalDistance: number;
-
   const [headerData, setHeaderData] = useState({
     initialFuel: '',
     timeOff: '',
@@ -46,28 +44,13 @@ export default function Home() {
   ]);
 
   const handleHeaderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value, type } = e.target;
-
-    if (type === "number") {
-      const regex = /^[0-9]*\.?[0-9]*$/;
-      if (!regex.test(value)) {
-        return;
-      }
-    }
+    const { id, value } = e.target;
 
     setHeaderData(prev => ({ ...prev, [id]: value }));
   };
 
   const handleBodyChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-
-
-    // if (type === "number") {
-    //   const regex = /^[0-9]*\.?[0-9]*$/;
-    //   if (!regex.test(value)) {
-    //     return;
-    //   }
-    // }
+    const { name, value } = e.target;
 
     const updatedProps = [...flightProps];
     updatedProps[index] = { ...updatedProps[index], [name]: value };
@@ -198,18 +181,18 @@ export default function Home() {
 
         <div className="flex flex-col gap-5">
 
-          <div className="grid grid-cols-5 items-center gap-3">
+          <div className="lg:grid lg:grid-cols-5 lg:items-center lg:gap-3 flex flex-col gap-5">
             <div className="flex flex-row gap-3">
               <Button onClick={handleAddRow} size={"lg"} className="w-fit hover:cursor-pointer">Agregar Punto</Button>
               <Button onClick={handleCalculateAllRows} size={"lg"} className="w-fit hover:cursor-pointer">Calcular Todo</Button>
             </div>
 
-            <div className="col-start-3 flex flex-col gap-2">
+            <div className="lg:col-start-3 flex flex-col gap-2 w-fit">
               <Label htmlFor="initialFuel">Combustible Inicial</Label>
               <Input type="number" id="initialFuel" value={headerData.initialFuel} onChange={handleHeaderChange} />
             </div>
 
-            <div className="flex justify-end">
+            <div className="lg:flex lg:justify-end">
               <div className="flex flex-col gap-2 ">
                 <Label>Time Off</Label>
                 <Input type="time" id="timeOff" className="w-fit" value={headerData.timeOff} onChange={handleHeaderChange} />
@@ -217,7 +200,7 @@ export default function Home() {
 
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 w-fit">
               <Label>GPH / LPH</Label>
               <Input type="number" id="gph" value={headerData.gph} onChange={handleHeaderChange} />
             </div>
