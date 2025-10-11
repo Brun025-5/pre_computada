@@ -173,7 +173,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-fit mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-slate-800">Pre Computada</h1>
           <p className="text-slate-500">Introduce los datos para calcular.</p>
@@ -241,11 +241,11 @@ export default function Home() {
                     <TableHead className="text-center border-r" rowSpan={2}>Frec.</TableHead>
                     <TableHead className="text-center border-r" rowSpan={2}>Id.</TableHead>
 
-                    <TableHead className="text-center border-r">Dirección</TableHead>
-                    <TableHead className="text-center border-r">Velocidad</TableHead>
+                    <TableHead className="text-center border-r">Dir.</TableHead>
+                    <TableHead className="text-center border-r">Vel.</TableHead>
 
                     <TableHead className="text-center border-r p-0">
-                      <Input type="number" id="cas" value={headerData.cas} onChange={handleHeaderChange} className="font-normal" />
+                      <Input type="number" id="cas" value={headerData.cas} onChange={handleHeaderChange} className="font-normal w-15" />
                     </TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={2}>-L<br />+R<br />WCA</TableHead>
@@ -276,22 +276,22 @@ export default function Home() {
                 <TableBody>
                   {flightProps.map((props, index) => (
                     <React.Fragment key={props.id}>
-                      <TableRow className="hover:bg-default border-b-0">
-                        <TableCell><Input name="cp1" value={props.cp1} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell><Input name="cp2" value={props.cp2} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell rowSpan={2}><Input type="number" name="frequency" value={props.frequency} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell rowSpan={2}><Input type="number" name="identification" value={props.identification} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell rowSpan={2}><Input type="number" name="course" value={props.course} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell rowSpan={2}><Input type="number" name="altitude" value={props.altitude} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell><Input type="number" name="direction" value={props.direction} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell><Input type="number" name="velocity" value={props.velocity} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                      <TableRow className="hover:bg-default border-b-0 text-center">
+                        <TableCell><Input name="cp1" value={props.cp1} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell><Input name="cp2" value={props.cp2} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell rowSpan={2}><Input type="number" name="frequency" value={props.frequency} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell rowSpan={2}><Input type="number" name="identification" value={props.identification} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell rowSpan={2}><Input type="number" name="course" value={props.course} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell rowSpan={2}><Input type="number" name="altitude" value={props.altitude} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell><Input type="number" name="direction" value={props.direction} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell><Input type="number" name="velocity" value={props.velocity} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
                         <TableCell rowSpan={2}><span>{props.tas}</span></TableCell>
                         <TableCell><span>{props.tc1}</span></TableCell>
-                        <TableCell className="p-1"><Input type="number" name="th1" value={props.th1} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell className="p-1"><Input type="number" name="mh1" min={-100} value={props.mh1} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><Input type="number" name="th1" value={props.th1} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell><Input type="number" name="mh1" min={-100} value={props.mh1} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
                         <TableCell rowSpan={2}><span>{props.ch}</span></TableCell>
                         <TableCell><span>{props.leg}</span></TableCell>
-                        <TableCell><Input type="number" name="est" value={props.est} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><Input type="number" name="est" value={props.est} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
                         <TableCell><span>{props.ete}</span></TableCell>
                         <TableCell><span>{props.eta}</span></TableCell>
                         <TableCell className="border-r"><span>{props.fuel}</span></TableCell>
@@ -309,16 +309,16 @@ export default function Home() {
                         </TableCell>
                       </TableRow>
 
-                      <TableRow className="hover:bg-default">
-                        <TableCell colSpan={2}><Input type="number" name="distance" value={props.distance} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell colSpan={2}><Input type="number" name="temperature" value={props.temperature} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                      <TableRow className="hover:bg-default text-center">
+                        <TableCell colSpan={2}><Input type="number" name="distance" value={props.distance} onChange={(e) => handleBodyChange(index, e)} className="w-20"/></TableCell>
+                        <TableCell colSpan={2}><Input type="number" name="temperature" value={props.temperature} onChange={(e) => handleBodyChange(index, e)} className="w-20"/></TableCell>
                         <TableCell><span>{props.tc2}</span></TableCell>
-                        <TableCell className="p-1"><Input type="number" name="th2" value={props.th2} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell className="p-1"><Input type="number" name="mh2" value={props.mh2} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><Input type="number" name="th2" value={props.th2} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell><Input type="number" name="mh2" value={props.mh2} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
                         <TableCell><span>{props.rem1}</span></TableCell>
-                        <TableCell><Input type="number" name="act" value={props.act} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell><Input type="number" name="ate" value={props.ate} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
-                        <TableCell><Input type="number" name="ata" value={props.ata} onChange={(e) => handleBodyChange(index, e)} /></TableCell>
+                        <TableCell><Input type="number" name="act" value={props.act} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell><Input type="number" name="ate" value={props.ate} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
+                        <TableCell><Input type="number" name="ata" value={props.ata} onChange={(e) => handleBodyChange(index, e)} className="w-15"/></TableCell>
                         <TableCell className="border-r"><span>{props.rem2}</span></TableCell>
                       </TableRow>
                     </React.Fragment>
