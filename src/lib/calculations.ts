@@ -1,4 +1,4 @@
-import { FlightProps } from '@/app/page';
+import { FlightProps } from "@/types";
 
 export function round(value: number, decimals: number): number {
   const factor = Math.pow(10, decimals);
