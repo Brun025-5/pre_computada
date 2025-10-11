@@ -166,8 +166,8 @@ export default function Home() {
     <main className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-fit mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">Pre Computada</h1>
-          <p className="text-slate-500">Introduce los datos para calcular.</p>
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Pre Computada</h1>
+          <p className="text-slate-500 dark:text-slate-300">Introduce los datos para calcular.</p>
         </header>
 
         <div className="flex flex-col gap-5">
@@ -197,17 +197,17 @@ export default function Home() {
             </div>
           </div>
 
-          <Card className="p-0">
+          <Card className="p-0 overflow-hidden">
             <CardContent className="px-0">
               <Table id="data-table">
                 <TableHeader>
                   <TableRow className="hover:bg-default">
                     <TableHead className="text-center border-r" rowSpan={2} colSpan={2}>Check Points</TableHead>
-                    <TableHead className="text-center border-r bg-gray-200" colSpan={2}>VOR</TableHead>
+                    <TableHead className="text-center border-r bg-gray-200 dark:bg-zinc-800" colSpan={2}>VOR</TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={3}>Course</TableHead>
                     <TableHead className="text-center border-r" rowSpan={3}>Altitud</TableHead>
-                    <TableHead className="text-center border-r bg-gray-200" rowSpan={1} colSpan={2}>Aire</TableHead>
+                    <TableHead className="text-center border-r bg-gray-200 dark:bg-zinc-800" rowSpan={1} colSpan={2}>Aire</TableHead>
                     <TableHead className="text-center border-r">CAS</TableHead>
 
                     <TableHead className="text-center border-r" >TC</TableHead>
@@ -215,8 +215,8 @@ export default function Home() {
                     <TableHead className="text-center border-r" >MH</TableHead>
                     <TableHead className="text-center border-r" rowSpan={3}>CH</TableHead>
 
-                    <TableHead className="text-center border-r bg-gray-200">Dist.</TableHead>
-                    <TableHead className="text-center border-r bg-gray-200">GS</TableHead>
+                    <TableHead className="text-center border-r bg-gray-200 dark:bg-zinc-800">Dist.</TableHead>
+                    <TableHead className="text-center border-r bg-gray-200 dark:bg-zinc-800">GS</TableHead>
 
                     <TableHead className="text-center border-r" rowSpan={2}>ETE</TableHead>
 
