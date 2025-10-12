@@ -288,11 +288,11 @@ export default function Home() {
                         <TableCell className="border-r"><span>{leg.fuel}</span></TableCell>
                         <TableCell rowSpan={2}>
                           <div className={index > 0 ? "flex flex-col items-center gap-2" : ""}>
-                            <Button size={"sm"} onClick={() => handleCalculateRow(index)}>
+                            <Button size={"sm"} onClick={() => handleCalculateRow(index)} className="hover:cursor-pointer">
                               Calcular
                             </Button>
                             {index > 0 &&
-                              <Button variant={"destructive"} size={"icon"} onClick={() => handleDeleteRow(leg.id)}>
+                              <Button variant={"destructive"} size={"icon"} onClick={() => handleDeleteRow(leg.id)} className="hover:cursor-pointer">
                                 <LucideX />
                               </Button>
                             }
